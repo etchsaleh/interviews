@@ -1,9 +1,9 @@
 # pypractice — Python interview practice
 
-A small local web app for practising LeetCode-style problems **and** HTTP/API problems
-(GET/POST with `requests`) in Python. Built for a Java engineer switching to Python, so
-every problem has a **"Coming from Java"** tab, and there's a full
-[Java → Python guide](GUIDE.md) (also served at `/guide`).
+A small local web app for interview prep in Python, built for a Java engineer making the
+switch. It focuses on **graphs, queues and caching** (easy/medium, each with a twist),
+basic Python OOP, a light API refresher, and **system design** practice. It also has a
+3-week [study plan](STUDY_PLAN.md) and a [Java → Python guide](GUIDE.md).
 
 ## Run it
 
@@ -20,8 +20,10 @@ Open http://127.0.0.1:5000.
 
 | Page | What it does |
 |---|---|
-| **Problems** (`/`) | 14 algorithm problems + 8 API problems, with solved ticks saved in your browser |
-| **Problem** (`/problem/<id>`) | Description, Java tips, test list, editor, *Run tests* (Ctrl/⌘+Enter), *Show solution* |
+| **Problems** (`/`) | 35 problems: Graphs (5), Queues (4), Caching (4), Python OOP (2), Fundamentals (12), APIs (8). Shows solved ticks and best times |
+| **Problem** (`/problem/<id>`) | Description, *Twists to try*, Java tips, test list, editor, *Run tests* (Ctrl/⌘+Enter), *Show solution*, and a **timer** with target times (Easy 10 min, Medium 20 min) |
+| **Study Plan** (`/plan`) | 3-week schedule in priority order, coding-round playbook, behavioural/mindset prep, progress per category |
+| **System Design** (`/system-design`) | End-to-end interview framework, clarifying-question checklist, building blocks (LB, API gateway, queues, caches…), trade-offs, and 9 deliberately vague prompts with a 45-min mock timer, notes, and reveal-after sections |
 | **Playground** (`/playground`) | Run any snippet and see its `print` output |
 | **Guide** (`/guide`) | Java → Python cheat sheet: syntax, collections, comprehensions, classes, sorting, exceptions, `requests`, interview patterns, gotchas |
 | **Mock API** (`/mock/...`) | In-memory REST API the API problems call: users, paginated orders, todos (POST), login + bearer token, a flaky 503 endpoint, and `/echo` |
@@ -42,7 +44,7 @@ Your code is saved in the browser (localStorage) as you type.
 
 ## Adding a problem
 
-Append a dict to `problems/algorithms.py` or `problems/api.py`:
+Append a dict to `problems/focus.py`, `problems/algorithms.py` or `problems/api.py`:
 
 ```python
 {
@@ -57,6 +59,7 @@ Append a dict to `problems/algorithms.py` or `problems/api.py`:
     # optional: "compare": "unordered" | "unordered_nested" | "float"
     # optional: "mode": "class"  (LeetCode-style operations/arguments tests)
     # optional: "needs_base_url": True  (API problems)
+    # optional: "followups": ["twist 1", "twist 2"]  (shown as "Twists to try")
 }
 ```
 

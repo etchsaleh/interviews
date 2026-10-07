@@ -10,7 +10,7 @@ API_INTRO = """
 """
 
 
-def _todo_created(test, actual):
+def _todo_created(test, actual, _call_args):
     title = test["args"][0]
     todo = mock_api.TODOS.get(actual) if isinstance(actual, int) else None
     return todo is not None and todo["title"] == title and todo["completed"] is False

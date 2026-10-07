@@ -4,12 +4,14 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import uuid
 from pathlib import Path
 
 from harness import MARKER
 
 HARNESS = Path(__file__).with_name("harness.py")
 TIMEOUT_SECONDS = 10
+RUN_ID = "<run-id>"  # test arg placeholder, replaced with a fresh uuid on every run
 
 
 def _normalize(value, compare):
@@ -23,10 +25,10 @@ def _normalize(value, compare):
     return value
 
 
-def is_correct(problem, args, actual):
+def is_correct(problem, args, actual, call_args=None):
     if "validator" in problem:
         try:
-            return bool(problem["validator"](args, actual))
+            return bool(problem["validator"](args, actual, call_args))
         except Exception:  # a malformed answer shouldn't crash grading
             return False
     compare = problem.get("compare", "exact")
@@ -41,7 +43,7 @@ def run_solution(problem, code, base_url=None):
     tests = problem["tests"]
     call_args = []
     for t in tests:
-        args = list(t["args"])
+        args = [str(uuid.uuid4()) if a == RUN_ID else a for a in t["args"]]
         if problem.get("needs_base_url"):
             args = [base_url] + args
         call_args.append(args)
@@ -79,8 +81,8 @@ def run_solution(problem, code, base_url=None):
         return {"ok": False, "error": payload["load_error"], "stdout": payload["stdout"]}
 
     cases = []
-    for test, res in zip(tests, payload["results"]):
-        passed = res["error"] is None and is_correct(problem, test, res["actual"])
+    for test, args, res in zip(tests, call_args, payload["results"]):
+        passed = res["error"] is None and is_correct(problem, test, res["actual"], args)
         cases.append({
             "input": test["args"],
             "expected": test.get("expected"),

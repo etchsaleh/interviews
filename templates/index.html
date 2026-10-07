@@ -2,24 +2,27 @@
 {% block content %}
 <section class="hero">
   <h1>Practice interview problems in Python</h1>
-  <p>Pick a problem, write a solution in the editor, and run it against the tests. New to Python?
-     Start with the <a href="{{ url_for('guide') }}">Java → Python guide</a>, and use the
-     <a href="{{ url_for('playground') }}">playground</a> to try things out.</p>
+  <p>Easy/medium problems focused on <strong>graphs, queues and caching</strong>, each with a twist,
+     plus Python OOP, fundamentals and an API refresher. Follow the
+     <a href="{{ url_for('plan') }}">3-week study plan</a>, keep the
+     <a href="{{ url_for('guide') }}">Java → Python guide</a> open, and beat the target times:
+     Easy {{ targets.Easy }} min, Medium {{ targets.Medium }} min.</p>
   <p class="muted" id="progress"></p>
 </section>
 
 {% for category, problems in categories.items() %}
 <section class="category">
-  <h2>{{ category }}{% if category == "APIs" %} <span class="muted small">— GET/POST with <code>requests</code> against a built-in mock server</span>{% endif %}</h2>
+  <h2>{{ category }} <span class="muted small">· {{ notes[category] }}</span></h2>
   <table class="problem-list">
-    <thead><tr><th class="status-col"></th><th>Problem</th><th>Difficulty</th><th>Topics</th></tr></thead>
+    <thead><tr><th class="status-col"></th><th>Problem</th><th>Difficulty</th><th class="hide-sm">Topics</th><th>Best</th></tr></thead>
     <tbody>
     {% for p in problems %}
       <tr data-id="{{ p.id }}">
         <td class="status-col"><span class="status" title="Solved">✓</span></td>
         <td><a href="{{ url_for('problem_page', problem_id=p.id) }}">{{ p.title }}</a></td>
         <td><span class="badge {{ p.difficulty|lower }}">{{ p.difficulty }}</span></td>
-        <td class="tags">{% for t in p.tags %}<span class="tag">{{ t }}</span>{% endfor %}</td>
+        <td class="tags hide-sm">{% for t in p.tags %}<span class="tag">{{ t }}</span>{% endfor %}</td>
+        <td class="best muted small" data-target="{{ targets[p.difficulty] * 60 }}">–</td>
       </tr>
     {% endfor %}
     </tbody>
@@ -29,6 +32,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='timer.js') }}"></script>
 <script>
   (function () {
     var rows = document.querySelectorAll("tr[data-id]"), solved = 0;
@@ -36,6 +40,13 @@
       var done = false;
       try { done = localStorage.getItem("solved:" + row.dataset.id) === "1"; } catch (e) {}
       if (done) { row.classList.add("solved"); solved++; }
+      var best = null;
+      try { best = localStorage.getItem("best:" + row.dataset.id); } catch (e) {}
+      var cell = row.querySelector(".best");
+      if (best) {
+        cell.textContent = PracticeTimer.format(+best);
+        cell.classList.add(+best <= +cell.dataset.target ? "on-time" : "over-time");
+      }
     });
     document.getElementById("progress").textContent = solved + " of " + rows.length + " solved";
   })();

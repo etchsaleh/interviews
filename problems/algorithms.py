@@ -1,4 +1,4 @@
-"""LeetCode-style algorithm problems.
+"""LeetCode-style fundamentals (plus a graph and a caching classic).
 
 Each problem is a dict:
   id, title, difficulty, category, tags
@@ -10,6 +10,7 @@ Each problem is a dict:
   solution     - reference solution (also used by the test suite)
   tests        - list of {"args": [...], "expected": ...}
   compare      - "exact" (default), "unordered", "unordered_nested", "float"
+  followups    - optional list of extra twists to try after the tests pass
 """
 
 PROBLEMS = [
@@ -17,9 +18,10 @@ PROBLEMS = [
         "id": "two-sum",
         "title": "Two Sum",
         "difficulty": "Easy",
-        "category": "Algorithms",
+        "category": "Fundamentals",
         "tags": ["dict", "hash map"],
         "entry": "two_sum",
+        "followups": ['Return *all* index pairs that sum to target, without duplicates.', 'The input is sorted — can you do it in O(1) extra space?'],
         "description": """
 Given a list of integers `nums` and an integer `target`, return the **indices** of the two
 numbers that add up to `target`, as a list `[i, j]` with `i < j`.
@@ -60,7 +62,7 @@ two_sum([3, 2, 4], 6)       ->  [1, 2]
         "id": "valid-anagram",
         "title": "Valid Anagram",
         "difficulty": "Easy",
-        "category": "Algorithms",
+        "category": "Fundamentals",
         "tags": ["string", "Counter"],
         "entry": "is_anagram",
         "description": """
@@ -97,7 +99,7 @@ def is_anagram(s: str, t: str) -> bool:
         "id": "valid-palindrome",
         "title": "Valid Palindrome",
         "difficulty": "Easy",
-        "category": "Algorithms",
+        "category": "Fundamentals",
         "tags": ["string", "two pointers", "slicing"],
         "entry": "is_palindrome",
         "description": """
@@ -134,9 +136,10 @@ is_palindrome("race a car")                     -> False
         "id": "valid-parentheses",
         "title": "Valid Parentheses",
         "difficulty": "Easy",
-        "category": "Algorithms",
+        "category": "Fundamentals",
         "tags": ["stack"],
         "entry": "is_valid",
+        "followups": ['Also allow `*` as a wildcard for any single bracket or nothing.', 'Return the index of the first invalid character instead of a bool.'],
         "description": """
 Given a string containing only `()[]{}`, return `True` if every bracket is closed by the
 same type of bracket in the correct order.
@@ -180,7 +183,7 @@ is_valid("([])")   -> True
         "id": "binary-search",
         "title": "Binary Search",
         "difficulty": "Easy",
-        "category": "Algorithms",
+        "category": "Fundamentals",
         "tags": ["binary search"],
         "entry": "search",
         "description": """
@@ -226,7 +229,7 @@ search([-1, 0, 3, 5, 9, 12], 2) -> -1
         "id": "max-subarray",
         "title": "Maximum Subarray",
         "difficulty": "Medium",
-        "category": "Algorithms",
+        "category": "Fundamentals",
         "tags": ["dynamic programming", "Kadane"],
         "entry": "max_sub_array",
         "description": """
@@ -263,7 +266,7 @@ max_sub_array([-3, -1, -2])                    -> -1
         "id": "group-anagrams",
         "title": "Group Anagrams",
         "difficulty": "Medium",
-        "category": "Algorithms",
+        "category": "Fundamentals",
         "tags": ["dict", "defaultdict", "sorting"],
         "entry": "group_anagrams",
         "description": """
@@ -306,9 +309,10 @@ def group_anagrams(words: list[str]) -> list[list[str]]:
         "id": "top-k-frequent",
         "title": "Top K Frequent Elements",
         "difficulty": "Medium",
-        "category": "Algorithms",
+        "category": "Fundamentals",
         "tags": ["Counter", "heap"],
         "entry": "top_k_frequent",
+        "followups": ['Break frequency ties by smallest value and return them in order.', 'Numbers arrive as a stream: support `add(x)` and `top(k)`.'],
         "description": """
 Return the `k` most frequent elements of `nums`. Any order is accepted; the answer is
 guaranteed to be unique.
@@ -342,7 +346,7 @@ def top_k_frequent(nums: list[int], k: int) -> list[int]:
         "id": "product-except-self",
         "title": "Product of Array Except Self",
         "difficulty": "Medium",
-        "category": "Algorithms",
+        "category": "Fundamentals",
         "tags": ["prefix sums"],
         "entry": "product_except_self",
         "description": """
@@ -384,7 +388,7 @@ product_except_self([1, 2, 3, 4]) -> [24, 12, 8, 6]
         "id": "longest-substring",
         "title": "Longest Substring Without Repeating Characters",
         "difficulty": "Medium",
-        "category": "Algorithms",
+        "category": "Fundamentals",
         "tags": ["sliding window", "set"],
         "entry": "length_of_longest_substring",
         "description": """
@@ -426,9 +430,10 @@ length_of_longest_substring("pwwkew")   -> 3   # "wke"
         "id": "merge-intervals",
         "title": "Merge Intervals",
         "difficulty": "Medium",
-        "category": "Algorithms",
+        "category": "Fundamentals",
         "tags": ["sorting", "lambda"],
         "entry": "merge",
+        "followups": ['Insert one new interval into an already-merged list.', 'Return the total length covered instead of the intervals.'],
         "description": """
 Given a list of intervals `[start, end]`, merge all overlapping intervals and return the
 result sorted by start.
@@ -467,7 +472,7 @@ merge([[1, 4], [4, 5]])                    -> [[1, 5]]
         "id": "climbing-stairs",
         "title": "Climbing Stairs",
         "difficulty": "Easy",
-        "category": "Algorithms",
+        "category": "Fundamentals",
         "tags": ["dynamic programming", "memoization"],
         "entry": "climb_stairs",
         "description": """
@@ -511,9 +516,10 @@ def climb_stairs(n: int) -> int:
         "id": "number-of-islands",
         "title": "Number of Islands",
         "difficulty": "Medium",
-        "category": "Algorithms",
+        "category": "Graphs",
         "tags": ["BFS", "grid", "deque"],
         "entry": "num_islands",
+        "followups": ['Return the size of the largest island.', 'Cells turn to land one by one — report the island count after each (union-find).'],
         "description": """
 Given a 2D grid of `"1"` (land) and `"0"` (water), count the islands. An island is land
 connected horizontally or vertically.
@@ -573,9 +579,10 @@ def num_islands(grid: list[list[str]]) -> int:
         "id": "lru-cache",
         "title": "LRU Cache",
         "difficulty": "Medium",
-        "category": "Algorithms",
+        "category": "Caching",
         "tags": ["class design", "OrderedDict"],
         "entry": "LRUCache",
+        "followups": ['Implement it without `OrderedDict` (dict + doubly linked list).', 'Add per-key TTL — see *LRU Cache with Expiry*.'],
         "mode": "class",
         "description": """
 Design a Least-Recently-Used cache with a fixed `capacity`:

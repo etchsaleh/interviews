@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ problem.title }} · PyPractice{% endblock %}
-{% block head %}{% include "editor_assets.html" %}{% endblock %}
+{% block head %}{% include "editor_assets.html" %}<script src="{{ url_for('static', filename='timer.js') }}"></script>{% endblock %}
 {% block main_class %}workspace{% endblock %}
 {% block content %}
 <section class="pane left">
@@ -20,6 +20,13 @@
 
   <div class="tab-panel prose" id="tab-desc">
     {{ problem.description|md }}
+    {% if problem.followups %}
+      <div class="twists">
+        <h3>Twists to try</h3>
+        <p class="muted small">After the tests pass, adapt your solution to one of these — no tests, just you. This is how their question bank works.</p>
+        <ul>{% for f in problem.followups %}<li>{{ f|md }}</li>{% endfor %}</ul>
+      </div>
+    {% endif %}
     {% if problem.needs_base_url %}
       <p class="callout">Mock API for this session: <code>{{ base_url }}</code> — try
         <a href="{{ base_url }}/users" target="_blank">{{ base_url }}/users</a>.</p>
@@ -41,7 +48,13 @@
 
 <section class="pane right">
   <div class="toolbar">
-    <span class="muted small">solution.py · <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Enter</kbd> to run</span>
+    <div class="timer" id="timer" title="Starts on your first keystroke. Target for {{ problem.difficulty }}: {{ problem.target_minutes }} min">
+      <span class="clock" id="timer-clock">00:00</span>
+      <span class="muted small">/ {{ problem.target_minutes }}:00</span>
+      <button id="timer-toggle" class="ghost small-btn" title="Pause / resume">❚❚</button>
+      <button id="timer-reset" class="ghost small-btn" title="Reset timer">↺</button>
+      <span class="muted small" id="timer-best"></span>
+    </div>
     <div class="buttons">
       <button id="btn-solution" class="ghost">Show solution</button>
       <button id="btn-reset" class="ghost">Reset</button>

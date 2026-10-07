@@ -1,7 +1,10 @@
 import pytest
 import requests
 
-from problems import ALL_PROBLEMS
+import re
+from pathlib import Path
+
+from problems import ALL_PROBLEMS, BY_ID
 from runner import run_solution
 
 
@@ -21,14 +24,14 @@ def test_starter_code_does_not_pass(problem, live_server):
 
 
 def test_syntax_error_is_reported():
-    problem = ALL_PROBLEMS[0]
+    problem = BY_ID["two-sum"]
     report = run_solution(problem, "def two_sum(nums, target)\n    return []\n")
     assert not report["ok"]
     assert "SyntaxError" in report["error"]
 
 
 def test_runtime_error_shows_user_traceback():
-    problem = ALL_PROBLEMS[0]
+    problem = BY_ID["two-sum"]
     report = run_solution(problem, "def two_sum(nums, target):\n    return nums[99]\n")
     assert report["ok"]
     assert report["passed"] == 0
@@ -37,7 +40,7 @@ def test_runtime_error_shows_user_traceback():
 
 
 def test_print_output_is_captured():
-    problem = ALL_PROBLEMS[0]
+    problem = BY_ID["two-sum"]
     code = "def two_sum(nums, target):\n    print('debug', target)\n    return [0, 1]\n"
     report = run_solution(problem, code)
     assert report["cases"][0]["stdout"] == "debug 9\n"
@@ -47,13 +50,14 @@ def test_print_output_is_captured():
 def test_infinite_loop_times_out(monkeypatch):
     import runner
     monkeypatch.setattr(runner, "TIMEOUT_SECONDS", 1)
-    report = runner.run_solution(ALL_PROBLEMS[0], "def two_sum(nums, target):\n    while True: pass\n")
+    report = runner.run_solution(BY_ID["two-sum"], "def two_sum(nums, target):\n    while True: pass\n")
     assert not report["ok"]
     assert "Time limit" in report["error"]
 
 
 def test_pages_render(client):
-    for path in ["/", "/guide", "/playground", "/problem/two-sum", "/problem/api-retry"]:
+    for path in ["/", "/guide", "/plan", "/system-design", "/playground", "/problem/two-sum", "/problem/api-retry",
+                 "/problem/ttl-cache"]:
         resp = client.get(path)
         assert resp.status_code == 200, path
     assert client.get("/problem/nope").status_code == 404
@@ -74,3 +78,21 @@ def test_run_endpoint(live_server):
 def test_playground(live_server):
     resp = requests.post(f"{live_server}/api/run", json={"id": "playground", "code": "print(7 // 2)"})
     assert resp.json()["stdout"] == "3\n"
+
+
+def test_study_plan_links_point_to_real_problems():
+    plan = (Path(__file__).resolve().parent.parent / "STUDY_PLAN.md").read_text()
+    linked = set(re.findall(r"\(/problem/([\w-]+)\)", plan))
+    assert linked, "plan should link to problems"
+    assert linked <= set(BY_ID), linked - set(BY_ID)
+
+
+def test_uncached_price_lookups_fail(live_server):
+    naive = (
+        "import requests\n"
+        "def get_prices(base_url, skus, client_id):\n"
+        "    return [requests.get(f'{base_url}/price/{s}', params={'client': client_id}).json()['price'] for s in skus]\n"
+    )
+    report = run_solution(BY_ID["cached-prices"], naive, base_url=f"{live_server}/mock")
+    passed = [c["passed"] for c in report["cases"]]
+    assert passed == [False, False, True]  # right prices but too many calls; empty list is trivially fine

@@ -564,6 +564,84 @@ def find(x):
     return x
 ```
 
+### Graphs, queues and caching: the focus areas
+
+```python
+# Build an adjacency list from an edge list
+from collections import defaultdict
+graph = defaultdict(list)
+for a, b in edges:
+    graph[a].append(b)
+    graph[b].append(a)          # omit for directed graphs
+
+# Topological sort (Kahn) + cycle detection
+from collections import deque
+indegree = {node: 0 for node in nodes}
+for a, b in edges:              # a before b
+    indegree[b] += 1
+q = deque(n for n, d in indegree.items() if d == 0)
+order = []
+while q:
+    node = q.popleft()
+    order.append(node)
+    for nxt in graph[node]:
+        indegree[nxt] -= 1
+        if indegree[nxt] == 0:
+            q.append(nxt)
+has_cycle = len(order) < len(nodes)
+
+# Dijkstra (weighted shortest path)
+import heapq
+dist, heap = {}, [(0, source)]
+while heap:
+    d, node = heapq.heappop(heap)
+    if node in dist:
+        continue
+    dist[node] = d
+    for nxt, w in graph[node]:          # graph[node] = [(neighbour, weight), ...]
+        if nxt not in dist:
+            heapq.heappush(heap, (d + w, nxt))
+
+# Sliding window over a time-ordered stream
+window = deque()
+def record(t):
+    window.append(t)
+    while window[0] <= t - WINDOW:
+        window.popleft()
+
+# Max-priority queue with FIFO tie-breaking
+import itertools
+counter = itertools.count()
+heapq.heappush(heap, (-priority, next(counter), item))
+
+# LRU cache in ~10 lines
+from collections import OrderedDict
+class LRU:
+    def __init__(self, capacity):
+        self.capacity, self.data = capacity, OrderedDict()
+    def get(self, key):
+        if key not in self.data:
+            return -1
+        self.data.move_to_end(key)
+        return self.data[key]
+    def put(self, key, value):
+        self.data[key] = value
+        self.data.move_to_end(key)
+        if len(self.data) > self.capacity:
+            self.data.popitem(last=False)      # evict least recently used
+
+# Memoize any pure function
+from functools import lru_cache
+@lru_cache(maxsize=1024)
+def expensive(x): ...
+expensive.cache_info()                     # hits, misses, size
+
+# TTL: store the expiry next to the value
+cache[key] = (value, now + ttl)
+value, expires_at = cache[key]
+if now >= expires_at: ...                  # expired
+```
+
 Other stdlib helpers worth knowing: `itertools.permutations`, `combinations`, `product`,
 `accumulate` (prefix sums), `math.gcd`, `math.isqrt`, `zip(*matrix)` (transpose),
 `str.maketrans`.
@@ -588,10 +666,39 @@ Other stdlib helpers worth knowing: `itertools.permutations`, `combinations`, `p
 
 ---
 
-## 15. How to use this app
+## 15. Writing Python fast under time pressure
 
-1. Read the problem, then the **Coming from Java** tab for the Python idioms that problem exercises.
-2. Write your solution and press **Run tests** (or `Ctrl/⌘ + Enter`). `print()` output is shown per test.
-3. Stuck? **Show solution** loads the reference answer — read it, reset, and re-type it from memory.
-4. Use the **Playground** for quick experiments ("what does `-7 // 2` return?").
-5. API problems hit a mock server bundled with the app; open its URLs in your browser to see the JSON.
+Candidates who don't use Python tend not to finish on time, so speed is the point of the switch.
+These save the most minutes:
+
+- **Reach for the stdlib first:** `Counter`, `defaultdict`, `deque`, `heapq`, `OrderedDict`,
+  `bisect`, `itertools`, `functools.cache`. Memorise the imports:
+
+  ```python
+  from collections import Counter, defaultdict, deque, OrderedDict
+  import heapq, bisect, itertools, math
+  from functools import cache
+  ```
+
+- **No boilerplate:** no classes unless the problem is about state, no type declarations,
+  no getters. A function and a couple of local variables is the norm.
+- **Unpack everything:** `for i, (a, b) in enumerate(pairs):`, `lo, hi = 0, len(a) - 1`, `x, y = y, x`.
+- **Comprehensions** for building lists, sets and dicts in one line.
+- **Tuples as composite keys:** `seen.add((r, c))`, `memo[(i, j)]`, sorting by `(-score, name)`.
+- **`float("inf")`** for min/max sentinels; `max(..., default=0)` for possibly-empty input.
+- **Debug with `print()`.** It's fast and it shows up per test in this app.
+- **Write, run, fix.** Python has no compile step; run the tests early and often.
+- **Know the edge cases Python handles for you:** big ints, negative indexes, slicing past
+  the end (`a[5:100]` is fine), and `==` on lists and dicts.
+
+---
+
+## 16. How to use this app
+
+1. Follow the **Study Plan**. Start each problem and the timer starts on your first keystroke. Targets: Easy 10 min, Medium 20 min.
+2. Read the problem, then the **Coming from Java** tab for the Python idioms that problem exercises.
+3. Write your solution and press **Run tests** (or `Ctrl/⌘ + Enter`). `print()` output is shown per test.
+4. Once it passes, try one of the **Twists to try**. The real questions are familiar problems with a twist.
+5. Stuck? **Show solution** loads the reference answer (and your time isn't recorded). Read it, reset, and solve again from a blank editor later.
+6. Use the **Playground** for quick experiments ("what does `-7 // 2` return?").
+7. API problems hit a mock server bundled with the app; open its URLs in your browser to see the JSON.

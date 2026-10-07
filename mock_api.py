@@ -5,6 +5,7 @@ e.g. http://127.0.0.1:5000/mock/users
 """
 import itertools
 import threading
+import time
 from collections import defaultdict
 
 from flask import Blueprint, jsonify, request
@@ -36,6 +37,11 @@ TOKENS = {}  # token -> username
 TODOS = {}
 _todo_ids = itertools.count(1)
 _flaky_attempts = defaultdict(int)
+PRICE_CALLS = defaultdict(lambda: defaultdict(int))  # client -> sku -> number of calls
+
+
+def price_for(sku):
+    return round(sum(ord(c) for c in sku) % 90 + 9.99, 2)
 
 
 def _error(message, status):
@@ -121,6 +127,16 @@ def flaky():
     if attempt % 3 != 0:
         return _error("service temporarily unavailable, try again", 503)
     return jsonify({"key": key, "value": len(key) * 7})
+
+
+@bp.get("/price/<sku>")
+def price(sku):
+    """A deliberately slow lookup - callers are expected to cache results."""
+    client = request.args.get("client", "anonymous")
+    with _lock:
+        PRICE_CALLS[client][sku] += 1
+    time.sleep(0.05)
+    return jsonify({"sku": sku, "price": price_for(sku)})
 
 
 @bp.route("/echo", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])

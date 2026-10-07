@@ -9,19 +9,22 @@ from flask import Flask, abort, jsonify, render_template, request
 from markupsafe import Markup
 
 import mock_api
-from problems import ALL_PROBLEMS, BY_ID
+from problems import ALL_PROBLEMS, BY_ID, CATEGORY_NOTES, CATEGORY_ORDER
 from runner import run_solution
+from system_design import PROMPTS as DESIGN_PROMPTS
 
 app = Flask(__name__)
 app.register_blueprint(mock_api.bp)
 
-GUIDE_PATH = Path(__file__).with_name("GUIDE.md")
+HERE = Path(__file__).parent
+# Minutes to aim for per difficulty - the real risk in the coding round is running out of time.
+TARGET_MINUTES = {"Easy": 10, "Medium": 20, "Hard": 30}
 PLAYGROUND = {"id": "playground", "entry": "", "tests": []}
 
 
 @app.template_filter("md")
 def render_markdown(text):
-    return Markup(markdown.markdown(text, extensions=["fenced_code", "tables", "toc"]))
+    return Markup(markdown.markdown(text, extensions=["fenced_code", "tables", "toc", "md_in_html"]))
 
 
 def mock_base_url():
@@ -40,6 +43,8 @@ def public_view(problem):
         "needs_base_url": problem.get("needs_base_url", False),
         "java_tip": problem["java_tip"],
         "starter": problem["starter"],
+        "followups": problem.get("followups", []),
+        "target_minutes": TARGET_MINUTES[problem["difficulty"]],
         "tests": [
             {"input": t["args"], "expected": t.get("expected"), "expected_label": t.get("expected_label")}
             for t in problem["tests"]
@@ -49,10 +54,8 @@ def public_view(problem):
 
 @app.get("/")
 def index():
-    categories = {}
-    for p in ALL_PROBLEMS:
-        categories.setdefault(p["category"], []).append(p)
-    return render_template("index.html", categories=categories)
+    categories = {c: [p for p in ALL_PROBLEMS if p["category"] == c] for c in CATEGORY_ORDER}
+    return render_template("index.html", categories=categories, notes=CATEGORY_NOTES, targets=TARGET_MINUTES)
 
 
 @app.get("/problem/<problem_id>")
@@ -71,7 +74,25 @@ def problem_page(problem_id):
 
 @app.get("/guide")
 def guide():
-    return render_template("guide.html", guide_md=GUIDE_PATH.read_text(encoding="utf-8"))
+    return render_template("guide.html", guide_md=(HERE / "GUIDE.md").read_text(encoding="utf-8"))
+
+
+@app.get("/plan")
+def plan():
+    return render_template(
+        "plan.html",
+        plan_md=(HERE / "STUDY_PLAN.md").read_text(encoding="utf-8"),
+        categories={c: [p["id"] for p in ALL_PROBLEMS if p["category"] == c] for c in CATEGORY_ORDER},
+    )
+
+
+@app.get("/system-design")
+def system_design():
+    return render_template(
+        "system_design.html",
+        guide_md=(HERE / "SYSTEM_DESIGN.md").read_text(encoding="utf-8"),
+        prompts=DESIGN_PROMPTS,
+    )
 
 
 @app.get("/playground")

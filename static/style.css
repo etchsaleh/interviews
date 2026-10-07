@@ -127,3 +127,35 @@ pre.error { color: var(--fail); background: var(--fail-bg); white-space: pre-wra
 .guide td code { white-space: nowrap; }
 @media (max-width: 640px) { .guide td code { white-space: normal; } .guide table { display: block; overflow-x: auto; } }
 .guide hr { display: none; }
+
+/* Timer */
+.timer { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.timer .clock { font: 600 1.05em var(--mono); min-width: 3.2em; }
+.timer .clock.over { color: var(--fail); }
+.timer .clock.paused { opacity: 0.6; }
+button.small-btn { padding: 2px 8px; font-size: 0.8em; }
+.best.on-time { color: var(--pass); }
+.best.over-time { color: var(--medium); }
+@media (max-width: 640px) { .hide-sm { display: none; } }
+
+/* Twists */
+.twists { margin-top: 18px; padding: 10px 14px; border: 1px dashed var(--border); border-radius: 8px; }
+.twists h3 { margin: 0 0 4px; font-size: 1em; }
+.twists li p { margin: 0; }
+
+/* Study plan progress */
+.progress-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); gap: 10px; max-width: 860px; margin-bottom: 8px; }
+.progress-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.progress-label { font-size: 0.8em; color: var(--muted); }
+.progress-count { font: 600 1.1em var(--mono); }
+.bar { height: 5px; background: var(--surface-2); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+.bar span { display: block; height: 100%; width: 0; background: var(--pass); }
+
+/* System design prompts */
+.sd-prompt { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px 18px 14px; margin: 18px 0; }
+.sd-prompt h3 { margin: 14px 0 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sd-prompt .brief { font-size: 1.05em; }
+.sd-mock { margin: 12px 0; display: grid; gap: 8px; }
+.sd-notes { width: 100%; font: 14px/1.5 var(--mono); background: var(--code-bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; resize: vertical; }
+.sd-prompt details { border-top: 1px solid var(--border); padding: 8px 0; }
+.sd-prompt summary { cursor: pointer; font-weight: 600; }

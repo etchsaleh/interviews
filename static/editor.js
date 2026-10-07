@@ -128,14 +128,39 @@ var PracticeEditor = (function () {
 
     var editor = createEditor(document.getElementById("code"), run);
     editor.set(store(key) || problem.starter);
-    editor.onChange(function () { store(key, editor.get()); });
+    // Timer: starts on the first edit, stops when every test passes.
+    var usedSolution = false;
+    var bestKey = "best:" + problem.id;
+    var bestEl = document.getElementById("timer-best");
+    var timer = PracticeTimer.create({
+      key: "timer:" + problem.id,
+      clock: document.getElementById("timer-clock"),
+      toggle: document.getElementById("timer-toggle"),
+      reset: document.getElementById("timer-reset"),
+      targetSeconds: problem.target_minutes * 60
+    });
+    function showBest() {
+      var best = store(bestKey);
+      bestEl.textContent = best ? "· best " + PracticeTimer.format(+best) : "";
+    }
+    showBest();
+    editor.onChange(function () {
+      store(key, editor.get());
+      timer.start();
+    });
 
     document.getElementById("btn-reset").addEventListener("click", function () {
-      if (confirm("Replace your code with the starter template?")) { editor.set(problem.starter); store(key, null); }
+      if (confirm("Start over? This restores the starter code and resets the timer.")) {
+        editor.set(problem.starter);
+        store(key, null);
+        timer.reset();
+        usedSolution = false;
+      }
     });
     document.getElementById("btn-solution").addEventListener("click", function () {
       if (!confirm("Show the reference solution? It replaces your code in the editor (Ctrl/Cmd+Z undoes it).")) return;
       fetch("/api/solution/" + problem.id).then(function (r) { return r.json(); }).then(function (data) {
+        usedSolution = true;
         editor.set(data.solution);
       });
     });
@@ -151,7 +176,18 @@ var PracticeEditor = (function () {
         var summary = el("div", "summary " + (allPassed ? "pass" : "fail"),
           (allPassed ? "All tests passed " : "Passed ") + report.passed + " / " + report.total);
         results.appendChild(summary);
-        if (allPassed) store("solved:" + problem.id, "1");
+        if (allPassed) {
+          store("solved:" + problem.id, "1");
+          timer.stop();
+          var secs = Math.round(timer.elapsed());
+          if (!usedSolution && secs > 0) {
+            var best = store(bestKey);
+            if (!best || secs < +best) store(bestKey, String(secs));
+            showBest();
+          }
+          summary.textContent += usedSolution ? " (solution shown — time not recorded)"
+            : " in " + PracticeTimer.format(secs) + (secs <= problem.target_minutes * 60 ? " — under target" : " — over target, redo it later");
+        }
         if (report.stdout) results.appendChild(block("stdout (module level)", report.stdout));
 
         report.cases.forEach(function (c, i) {

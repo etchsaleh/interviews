@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}System Design · PyPractice{% endblock %}
+{% block head %}<script src="{{ url_for('static', filename='timer.js') }}"></script>{% endblock %}
+{% block content %}
+<article class="prose guide">
+  {{ guide_md|md }}
+
+  <h2 id="practice-prompts">8. Practice prompts</h2>
+  <p>Each brief is intentionally vague. Do a timed attempt first, then reveal.</p>
+
+  {% for p in prompts %}
+  <section class="sd-prompt" id="sd-{{ p.id }}" data-id="{{ p.id }}">
+    <div class="sd-head">
+      <h3>{{ loop.index }}. {{ p.title }} <span class="badge {{ 'easy' if p.level == 'Warm-up' else ('hard' if p.level == 'Stretch' else 'medium') }}">{{ p.level }}</span></h3>
+    </div>
+    <blockquote class="brief">“{{ p.brief }}”</blockquote>
+
+    <div class="sd-mock">
+      <div class="timer">
+        <span class="clock">00:00</span><span class="muted small">/ 45:00</span>
+        <button class="ghost small-btn sd-toggle">▶ Start 45-min mock</button>
+        <button class="ghost small-btn sd-reset" title="Reset timer">↺</button>
+      </div>
+      <textarea class="sd-notes" rows="6" placeholder="Your clarifying questions, assumptions, requirements, components, trade-offs… (saved in this browser)"></textarea>
+    </div>
+
+    <details>
+      <summary>Clarifying questions to ask</summary>
+      <ul>{% for q in p.clarify %}<li>{{ q }}</li>{% endfor %}</ul>
+    </details>
+    <details>
+      <summary>Requirements a good candidate would land on</summary>
+      {{ p.requirements|md }}
+    </details>
+    <details>
+      <summary>One reasonable design</summary>
+      {{ p.design|md }}
+    </details>
+    <details>
+      <summary>Trade-offs to discuss</summary>
+      <ul>{% for t in p.tradeoffs %}<li>{{ t }}</li>{% endfor %}</ul>
+    </details>
+  </section>
+  {% endfor %}
+</article>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll(".sd-prompt").forEach(function (section) {
+    var id = section.dataset.id;
+    var notes = section.querySelector(".sd-notes");
+    var toggle = section.querySelector(".sd-toggle");
+    try { notes.value = localStorage.getItem("sd-notes:" + id) || ""; } catch (e) {}
+    notes.addEventListener("input", function () {
+      try { localStorage.setItem("sd-notes:" + id, notes.value); } catch (e) {}
+    });
+    var timer = PracticeTimer.create({
+      key: "sd-timer:" + id,
+      clock: section.querySelector(".clock"),
+      reset: section.querySelector(".sd-reset"),
+      targetSeconds: 45 * 60
+    });
+    function label() { toggle.textContent = timer.running() ? "❚❚ Pause" : (timer.elapsed() > 0 ? "▶ Resume" : "▶ Start 45-min mock"); }
+    toggle.addEventListener("click", function () { timer.running() ? timer.stop() : timer.start(); label(); });
+    section.querySelector(".sd-reset").addEventListener("click", label);
+    label();
+  });
+</script>
+{% endblock %}

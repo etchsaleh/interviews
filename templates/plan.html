@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Study Plan · PyPractice{% endblock %}
+{% block content %}
+<section class="progress-grid" id="progress-grid">
+  {% for category, ids in categories.items() %}
+  <div class="progress-card" data-ids="{{ ids|join(',') }}">
+    <div class="progress-label">{{ category }}</div>
+    <div class="progress-count"><span class="done">0</span> / {{ ids|length }}</div>
+    <div class="bar"><span></span></div>
+  </div>
+  {% endfor %}
+</section>
+<article class="prose guide">
+  {{ plan_md|md }}
+</article>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll(".progress-card").forEach(function (card) {
+    var ids = card.dataset.ids.split(","), done = 0;
+    ids.forEach(function (id) {
+      try { if (localStorage.getItem("solved:" + id) === "1") done++; } catch (e) {}
+    });
+    card.querySelector(".done").textContent = done;
+    card.querySelector(".bar span").style.width = (100 * done / ids.length) + "%";
+  });
+</script>
+{% endblock %}
