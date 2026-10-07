@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>Practice interview problems in Python</h1>
+  <p>Pick a problem, write a solution in the editor, and run it against the tests. New to Python?
+     Start with the <a href="{{ url_for('guide') }}">Java → Python guide</a>, and use the
+     <a href="{{ url_for('playground') }}">playground</a> to try things out.</p>
+  <p class="muted" id="progress"></p>
+</section>
+
+{% for category, problems in categories.items() %}
+<section class="category">
+  <h2>{{ category }}{% if category == "APIs" %} <span class="muted small">— GET/POST with <code>requests</code> against a built-in mock server</span>{% endif %}</h2>
+  <table class="problem-list">
+    <thead><tr><th class="status-col"></th><th>Problem</th><th>Difficulty</th><th>Topics</th></tr></thead>
+    <tbody>
+    {% for p in problems %}
+      <tr data-id="{{ p.id }}">
+        <td class="status-col"><span class="status" title="Solved">✓</span></td>
+        <td><a href="{{ url_for('problem_page', problem_id=p.id) }}">{{ p.title }}</a></td>
+        <td><span class="badge {{ p.difficulty|lower }}">{{ p.difficulty }}</span></td>
+        <td class="tags">{% for t in p.tags %}<span class="tag">{{ t }}</span>{% endfor %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    var rows = document.querySelectorAll("tr[data-id]"), solved = 0;
+    rows.forEach(function (row) {
+      var done = false;
+      try { done = localStorage.getItem("solved:" + row.dataset.id) === "1"; } catch (e) {}
+      if (done) { row.classList.add("solved"); solved++; }
+    });
+    document.getElementById("progress").textContent = solved + " of " + rows.length + " solved";
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Playground · PyPractice{% endblock %}
+{% block head %}{% include "editor_assets.html" %}{% endblock %}
+{% block main_class %}workspace{% endblock %}
+{% block content %}
+<section class="pane left prose">
+  <h1>Playground</h1>
+  <p>A scratchpad for experimenting. Whatever you <code>print()</code> shows up below the editor.
+     Code runs in a fresh Python process each time, with a 10 second limit.</p>
+  <p>The mock API is live at <code>{{ base_url }}</code>, so you can try <code>requests</code> here too:</p>
+  <table>
+    <thead><tr><th>Method</th><th>Path</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td><code>/users</code></td><td>query: <code>team</code>, <code>active=true|false</code></td></tr>
+      <tr><td>GET</td><td><code>/users/&lt;id&gt;</code></td><td>404 if missing</td></tr>
+      <tr><td>GET</td><td><code>/orders?page=N</code></td><td>paginated, <code>next_page</code> is null at the end</td></tr>
+      <tr><td>POST</td><td><code>/todos</code></td><td>JSON <code>{"title": ...}</code> → 201</td></tr>
+      <tr><td>GET</td><td><code>/todos/&lt;id&gt;</code></td><td></td></tr>
+      <tr><td>POST</td><td><code>/login</code></td><td>ada / lovelace, grace / hopper</td></tr>
+      <tr><td>GET</td><td><code>/profile</code></td><td>needs <code>Authorization: Bearer &lt;token&gt;</code></td></tr>
+      <tr><td>GET</td><td><code>/flaky?key=k</code></td><td>503, 503, 200, repeat</td></tr>
+      <tr><td>ANY</td><td><code>/echo</code></td><td>echoes your method, query, JSON and headers</td></tr>
+    </tbody>
+  </table>
+</section>
+<section class="pane right">
+  <div class="toolbar">
+    <span class="muted small">scratch.py · <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Enter</kbd> to run</span>
+    <div class="buttons">
+      <button id="btn-reset" class="ghost">Reset</button>
+      <button id="btn-run" class="primary">Run</button>
+    </div>
+  </div>
+  <textarea id="code" spellcheck="false"></textarea>
+  <div id="results" class="results"><p class="muted">Output appears here.</p></div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>PracticeEditor.initPlayground({{ base_url|tojson }});</script>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ problem.title }} · PyPractice{% endblock %}
+{% block head %}{% include "editor_assets.html" %}{% endblock %}
+{% block main_class %}workspace{% endblock %}
+{% block content %}
+<section class="pane left">
+  <div class="problem-head">
+    <h1>{{ problem.title }}</h1>
+    <div>
+      <span class="badge {{ problem.difficulty|lower }}">{{ problem.difficulty }}</span>
+      {% for t in problem.tags %}<span class="tag">{{ t }}</span>{% endfor %}
+    </div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="desc">Description</button>
+    <button class="tab" data-tab="tip">Coming from Java</button>
+    <button class="tab" data-tab="tests">Tests ({{ problem.tests|length }})</button>
+  </div>
+
+  <div class="tab-panel prose" id="tab-desc">
+    {{ problem.description|md }}
+    {% if problem.needs_base_url %}
+      <p class="callout">Mock API for this session: <code>{{ base_url }}</code> — try
+        <a href="{{ base_url }}/users" target="_blank">{{ base_url }}/users</a>.</p>
+    {% endif %}
+  </div>
+  <div class="tab-panel prose" id="tab-tip" hidden>
+    {{ problem.java_tip|md }}
+    <p><a href="{{ url_for('guide') }}">Open the full Java → Python guide →</a></p>
+  </div>
+  <div class="tab-panel" id="tab-tests" hidden>
+    <ol class="test-preview" id="test-preview"></ol>
+  </div>
+
+  <div class="pager">
+    {% if prev_id %}<a href="{{ url_for('problem_page', problem_id=prev_id) }}">← Previous</a>{% else %}<span></span>{% endif %}
+    {% if next_id %}<a href="{{ url_for('problem_page', problem_id=next_id) }}">Next →</a>{% endif %}
+  </div>
+</section>
+
+<section class="pane right">
+  <div class="toolbar">
+    <span class="muted small">solution.py · <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Enter</kbd> to run</span>
+    <div class="buttons">
+      <button id="btn-solution" class="ghost">Show solution</button>
+      <button id="btn-reset" class="ghost">Reset</button>
+      <button id="btn-run" class="primary">Run tests</button>
+    </div>
+  </div>
+  <textarea id="code" spellcheck="false"></textarea>
+  <div id="results" class="results"><p class="muted">Run your code to see test results.</p></div>
+</section>
+<script type="application/json" id="problem-data">{{ problem|tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script>PracticeEditor.initProblemPage(JSON.parse(document.getElementById("problem-data").textContent));</script>
+{% endblock %}
