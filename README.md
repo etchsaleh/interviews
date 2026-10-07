@@ -49,7 +49,7 @@ Append a dict to `problems/focus.py`, `problems/algorithms.py` or `problems/api.
 ```python
 {
     "id": "my-problem", "title": "My Problem", "difficulty": "Easy",
-    "category": "Algorithms", "tags": ["list"],
+    "category": "Fundamentals", "tags": ["list"],  # one of CATEGORY_ORDER in problems/__init__.py
     "entry": "my_func",                      # function the tests call
     "description": "...markdown...",
     "java_tip": "...markdown...",
