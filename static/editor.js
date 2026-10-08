@@ -114,21 +114,67 @@ var PracticeEditor = (function () {
     var runBtn = document.getElementById("btn-run");
     var key = "code:" + problem.id;
     var entry = (problem.starter.match(/^(?:def|class)\s+(\w+)/m) || [])[1] || "solve";
-    var isClass = /^class\s/m.test(problem.starter);
+    var isClass = problem.mode === "class";
+    var isScript = problem.mode === "script";
+    var nParts = problem.parts.length;
+    var unlockKey = "unlocked:" + problem.id;
 
-    // Tests tab
-    var preview = document.getElementById("test-preview");
-    problem.tests.forEach(function (t) {
-      var li = el("li");
-      li.appendChild(el("code", "", isClass ? pyRepr(t.input[0]) + "\n" + pyRepr(t.input[1]) : callText(entry, t.input, problem.needs_base_url)));
-      li.appendChild(el("div", "muted small", "expected → " + (t.expected_label || pyRepr(t.expected))));
-      preview.appendChild(li);
-    });
+    function unlocked() {
+      return nParts ? Math.min(Math.max(+store(unlockKey) || 1, 1), nParts + 1) : 0;
+    }
+    function currentPart() { return Math.min(unlocked(), nParts); }
+
+    function inputText(input) {
+      if (isScript) return input[0];
+      if (isClass) return pyRepr(input[0]) + "\n" + pyRepr(input[1]);
+      return callText(entry, input, problem.needs_base_url);
+    }
+    function caseTitle(c, i) {
+      var parts = [(nParts ? "Part " + c.part + " · " : "") + "Test " + (i + 1)];
+      if (c.label) parts.push(c.label);
+      return parts.join(" · ");
+    }
+
+    // Tests tab (multi-part problems only list the parts unlocked so far)
+    function renderTestList() {
+      var preview = document.getElementById("test-preview");
+      preview.innerHTML = "";
+      problem.tests.forEach(function (t, i) {
+        if (nParts && t.part > currentPart()) return;
+        var li = el("li");
+        if (nParts || t.label) li.appendChild(el("div", "muted small", caseTitle(t, i)));
+        li.appendChild(el("pre", "test-code", inputText(t.input)));
+        li.appendChild(el("div", "muted small", "expected → " + (t.expected_label || pyRepr(t.expected))));
+        preview.appendChild(li);
+      });
+    }
+
+    // Multi-part: show the parts unlocked so far (plus discussion once everything passes)
+    function renderParts() {
+      if (!nParts) return;
+      var level = unlocked();
+      document.querySelectorAll(".part").forEach(function (section) {
+        var n = +section.dataset.part;
+        section.hidden = n > level;
+        var status = section.querySelector(".part-status");
+        if (status) {
+          var split = store("split:" + problem.id + ":" + n);
+          status.textContent = n < level ? "✓" + (split ? " " + PracticeTimer.format(+split) : "") : "";
+        }
+      });
+      var done = level > nParts;
+      document.getElementById("part-locked").hidden = done;
+      document.getElementById("part-progress").textContent = done
+        ? "All " + nParts + " parts complete"
+        : "Part " + level + " of " + nParts + (level > 1 ? " · earlier parts' tests keep running" : "");
+    }
+    renderTestList();
+    renderParts();
     setupTabs();
 
     var editor = createEditor(document.getElementById("code"), run);
     editor.set(store(key) || problem.starter);
-    // Timer: starts on the first edit, stops when every test passes.
+    // Timer: starts on the first edit, stops when every test (of the last part) passes.
     var usedSolution = false;
     var bestKey = "best:" + problem.id;
     var bestEl = document.getElementById("timer-best");
@@ -149,56 +195,97 @@ var PracticeEditor = (function () {
       timer.start();
     });
 
+    function resetParts() {
+      for (var n = 1; n <= nParts + 1; n++) store("split:" + problem.id + ":" + n, null);
+      store(unlockKey, null);
+      renderParts();
+      renderTestList();
+    }
+
     document.getElementById("btn-reset").addEventListener("click", function () {
-      if (confirm("Start over? This restores the starter code and resets the timer.")) {
+      var what = nParts ? "the starter code, re-locks the later parts and resets the timer" : "the starter code and resets the timer";
+      if (confirm("Start over? This restores " + what + ".")) {
         editor.set(problem.starter);
         store(key, null);
         timer.reset();
         usedSolution = false;
+        resetParts();
       }
     });
     document.getElementById("btn-solution").addEventListener("click", function () {
-      if (!confirm("Show the reference solution? It replaces your code in the editor (Ctrl/Cmd+Z undoes it).")) return;
+      var msg = "Show the reference solution? It replaces your code in the editor (Ctrl/Cmd+Z undoes it)" +
+        (nParts ? " and covers every part, so all parts get unlocked." : ".");
+      if (!confirm(msg)) return;
       fetch("/api/solution/" + problem.id).then(function (r) { return r.json(); }).then(function (data) {
         usedSolution = true;
         editor.set(data.solution);
+        if (nParts) {
+          store(unlockKey, String(nParts));
+          renderParts();
+          renderTestList();
+        }
       });
     });
+
+    function showTab(name) {
+      var tab = document.querySelector('.tab[data-tab="' + name + '"]');
+      if (tab) tab.click();
+    }
+
+    function finishProblem(summary) {
+      store("solved:" + problem.id, "1");
+      timer.stop();
+      var secs = Math.round(timer.elapsed());
+      if (!usedSolution && secs > 0) {
+        var best = store(bestKey);
+        if (!best || secs < +best) store(bestKey, String(secs));
+        showBest();
+      }
+      summary.textContent += usedSolution ? " (solution shown — time not recorded)"
+        : " in " + PracticeTimer.format(secs) + (secs <= problem.target_minutes * 60 ? " — under target" : " — over target, redo it later");
+    }
 
     function run() {
       runBtn.disabled = true;
       runBtn.textContent = "Running…";
       results.innerHTML = "<p class='muted'>Running…</p>";
-      post("/api/run", { id: problem.id, code: editor.get() }).then(function (report) {
+      var part = currentPart();
+      post("/api/run", { id: problem.id, code: editor.get(), upto: part }).then(function (report) {
         if (!report.ok) return renderError(results, report);
         results.innerHTML = "";
         var allPassed = report.passed === report.total;
+        var label = nParts ? "Part " + part + " — " : "";
         var summary = el("div", "summary " + (allPassed ? "pass" : "fail"),
-          (allPassed ? "All tests passed " : "Passed ") + report.passed + " / " + report.total);
+          label + (allPassed ? "all tests passed " : "passed ") + report.passed + " / " + report.total);
         results.appendChild(summary);
-        if (allPassed) {
-          store("solved:" + problem.id, "1");
-          timer.stop();
-          var secs = Math.round(timer.elapsed());
-          if (!usedSolution && secs > 0) {
-            var best = store(bestKey);
-            if (!best || secs < +best) store(bestKey, String(secs));
-            showBest();
+
+        if (allPassed && nParts && unlocked() <= nParts) {
+          store("split:" + problem.id + ":" + part, String(Math.round(timer.elapsed())));
+          store(unlockKey, String(part + 1));
+          if (part < nParts) {
+            summary.textContent += " — Part " + (part + 1) + " unlocked. Read it in the Description tab.";
+          } else {
+            finishProblem(summary);
+            summary.textContent += ". Discussion follow-ups unlocked.";
           }
-          summary.textContent += usedSolution ? " (solution shown — time not recorded)"
-            : " in " + PracticeTimer.format(secs) + (secs <= problem.target_minutes * 60 ? " — under target" : " — over target, redo it later");
+          renderParts();
+          renderTestList();
+          showTab("desc");
+          var next = document.querySelector('.part[data-part="' + (part + 1) + '"]');
+          if (next) next.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else if (allPassed) {
+          finishProblem(summary);
         }
         if (report.stdout) results.appendChild(block("stdout (module level)", report.stdout));
 
         report.cases.forEach(function (c, i) {
           var d = el("details", "case " + (c.passed ? "pass" : "fail"));
           if (!c.passed) d.open = true;
-          d.appendChild(el("summary", "", (c.passed ? "✓ " : "✗ ") + "Test " + (i + 1) + "  ·  " + c.ms + " ms"));
-          var input = isClass ? pyRepr(c.input[0]) + "\n" + pyRepr(c.input[1]) : callText(entry, c.input, problem.needs_base_url);
-          d.appendChild(block("call", input));
+          d.appendChild(el("summary", "", (c.passed ? "✓ " : "✗ ") + caseTitle(c, i) + "  ·  " + c.ms + " ms"));
+          d.appendChild(block(isScript ? "test" : "call", inputText(c.input)));
           d.appendChild(block("expected", c.expected_label || pyRepr(c.expected)));
           if (c.error) d.appendChild(block("error", c.error, "error"));
-          else d.appendChild(block("returned", pyRepr(c.actual)));
+          else d.appendChild(block(isScript ? "result" : "returned", pyRepr(c.actual)));
           if (c.stdout) d.appendChild(block("stdout", c.stdout));
           results.appendChild(d);
         });

@@ -15,11 +15,28 @@
   <div class="tabs" role="tablist">
     <button class="tab active" data-tab="desc">Description</button>
     <button class="tab" data-tab="tip">Coming from Java</button>
-    <button class="tab" data-tab="tests">Tests ({{ problem.tests|length }})</button>
+    <button class="tab" data-tab="tests">Tests{% if not problem.parts %} ({{ problem.tests|length }}){% endif %}</button>
   </div>
 
   <div class="tab-panel prose" id="tab-desc">
     {{ problem.description|md }}
+    {% if problem.parts %}
+      <div class="part-progress" id="part-progress"></div>
+      {% for part in problem.parts %}
+      <section class="part" data-part="{{ loop.index }}" hidden>
+        <h2>Part {{ loop.index }}: {{ part.title }} <span class="part-status"></span></h2>
+        {{ part.description|md }}
+      </section>
+      {% endfor %}
+      <p class="muted small part-locked" id="part-locked">The next part unlocks when every test so far passes.</p>
+      {% if problem.discussion %}
+      <section class="part twists" data-part="{{ problem.parts|length + 1 }}" hidden>
+        <h3>Discussion follow-ups</h3>
+        <p class="muted small">All parts done. Interviewers usually spend the remaining time on these, so answer them out loud.</p>
+        <ul>{% for d in problem.discussion %}<li>{{ d|md }}</li>{% endfor %}</ul>
+      </section>
+      {% endif %}
+    {% endif %}
     {% if problem.followups %}
       <div class="twists">
         <h3>Twists to try</h3>

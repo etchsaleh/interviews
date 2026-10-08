@@ -102,3 +102,106 @@ def test_mock_index_lists_endpoints(client):
     for path in ["/mock", "/mock/"]:
         body = client.get(path).get_json()
         assert any(e["path"] == "/users" for e in body["endpoints"]), path
+
+
+# ----------------------------------------------------------------- multi-part
+MULTIPART = [p for p in ALL_PROBLEMS if p.get("parts")]
+
+
+@pytest.mark.parametrize("problem", MULTIPART, ids=lambda p: p["id"])
+def test_multipart_tests_are_numbered_by_part(problem):
+    parts = {t["part"] for t in problem["tests"]}
+    assert parts == set(range(1, len(problem["parts"]) + 1)), "every part needs tests"
+
+
+def test_upto_runs_only_unlocked_parts():
+    problem = BY_ID["mp-ip-iterator"]
+    report = run_solution(problem, problem["solution"], upto=2)
+    assert {c["part"] for c in report["cases"]} == {1, 2}
+    assert report["passed"] == report["total"]
+
+
+def test_counting_replies_by_number_fails_only_part_3():
+    counting = """
+class Node:
+    def __init__(self, node_id, children, parent):
+        self.node_id, self.children, self.parent = node_id, children, parent
+        self.total = self.waiting = 0
+
+    def sendAsyncMessage(self, node_id, message):
+        pass
+
+    def receiveMessage(self, fromNodeId, message):
+        if message in ("count", "COUNT"):
+            if not self.children:
+                return self._done("1")
+            self.total, self.waiting = 1, len(self.children)
+            for c in self.children:
+                self.sendAsyncMessage(c, "COUNT")
+        else:
+            self.total += int(message)
+            self.waiting -= 1
+            if self.waiting == 0:
+                self._done(str(self.total))
+
+    def _done(self, answer):
+        if self.parent is None:
+            print(answer)
+        else:
+            self.sendAsyncMessage(self.parent, answer)
+"""
+    report = run_solution(BY_ID["mp-cluster-messages"], counting)
+    failed_parts = {c["part"] for c in report["cases"] if not c["passed"]}
+    assert all(c["passed"] for c in report["cases"] if c["part"] == 1)
+    assert 3 in failed_parts
+
+
+def test_gpu_reference_matches_brute_force():
+    import random
+
+    ns = {}
+    exec(BY_ID["mp-gpu-credits"]["solution"], ns)
+
+    class Naive:
+        def __init__(self):
+            self.events = []
+
+        def add_credit(self, cid, amount, t, exp):
+            self.events.append((t, "add", amount, t + exp))
+
+        def subtract(self, amount, t):
+            self.events.append((t, "sub", amount, None))
+
+        def get_balance(self, t):
+            grants, debt = [], 0
+            for ts, kind, amount, end in sorted(e for e in self.events if e[0] <= t):
+                if kind == "add":
+                    paid = min(debt, amount)
+                    debt -= paid
+                    grants.append([ts, end, amount - paid])
+                else:
+                    for g in sorted((g for g in grants if g[0] <= ts <= g[1]), key=lambda g: g[1]):
+                        used = min(g[2], amount)
+                        g[2] -= used
+                        amount -= used
+                    debt += amount
+            active = [g for g in grants if g[0] <= t <= g[1]]
+            balance = sum(g[2] for g in active) - debt
+            return None if not active or balance < 0 else balance
+
+    rng = random.Random(7)
+    for _ in range(500):
+        ref, naive = ns["GPUCredit"](), Naive()
+        for t in rng.sample(range(60), rng.randint(1, 10)):
+            if rng.random() < 0.5:
+                args = (f"g{t}", rng.randint(0, 10), t, rng.randint(0, 25))
+                ref.add_credit(*args)
+                naive.add_credit(*args)
+            else:
+                args = (rng.randint(0, 12), t)
+                ref.subtract(*args)
+                naive.subtract(*args)
+            q = rng.randint(0, 70)
+            assert ref.get_balance(q) == naive.get_balance(q)
+        for q in range(75):
+            assert ref.get_balance(q) == naive.get_balance(q)

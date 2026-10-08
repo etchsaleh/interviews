@@ -54,9 +54,13 @@ def public_view(problem):
         "java_tip": problem["java_tip"],
         "starter": problem["starter"],
         "followups": problem.get("followups", []),
-        "target_minutes": TARGET_MINUTES[problem["difficulty"]],
+        "target_minutes": problem.get("target_minutes", TARGET_MINUTES[problem["difficulty"]]),
+        "mode": problem.get("mode", "function"),
+        "parts": problem.get("parts", []),
+        "discussion": problem.get("discussion", []),
         "tests": [
-            {"input": t["args"], "expected": t.get("expected"), "expected_label": t.get("expected_label")}
+            {"input": t["args"], "expected": t.get("expected"), "expected_label": t.get("expected_label"),
+             "part": t.get("part", 1), "label": t.get("label")}
             for t in problem["tests"]
         ],
     }
@@ -117,7 +121,8 @@ def api_run():
     if body.get("id") == "playground":
         return jsonify(run_solution(PLAYGROUND, code))
     problem = BY_ID.get(body.get("id")) or abort(404)
-    return jsonify(run_solution(problem, code, base_url=mock_base_url()))
+    upto = body.get("upto") if problem.get("parts") else None
+    return jsonify(run_solution(problem, code, base_url=mock_base_url(), upto=upto))
 
 
 @app.get("/api/solution/<problem_id>")

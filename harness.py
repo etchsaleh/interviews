@@ -7,7 +7,9 @@ import contextlib
 import copy
 import io
 import json
+import os
 import sys
+import tempfile
 import time
 import traceback
 
@@ -33,7 +35,7 @@ def to_jsonable(value):
 
 def short_traceback(exc):
     """Hide harness frames so the user only sees lines from their own code."""
-    frames = [f for f in traceback.extract_tb(exc.__traceback__) if f.filename == "solution.py"]
+    frames = [f for f in traceback.extract_tb(exc.__traceback__) if f.filename in ("solution.py", "<test>")]
     lines = ["Traceback (most recent call last):\n"]
     lines += traceback.format_list(frames)
     lines += traceback.format_exception_only(type(exc), exc)
@@ -60,7 +62,17 @@ def run_class(namespace, entry, args):
     return outputs
 
 
+def run_script(namespace, entry, args):
+    """Multi-part problems: args = [python_snippet]. The snippet sees the user's code plus a
+    fresh `tmpdir`, and stores its answer in `result`."""
+    scope = dict(namespace)
+    scope["tmpdir"] = tempfile.mkdtemp(prefix="t", dir=os.getcwd())
+    exec(compile(args[0], "<test>", "exec"), scope)
+    return scope.get("result")
+
+
 def main():
+    sys.path.insert(0, os.getcwd())  # lets tests import practice_helpers (we run with -I)
     spec = json.loads(sys.stdin.read())
     with open("solution.py", encoding="utf-8") as f:
         source = f.read()
@@ -79,7 +91,7 @@ def main():
         print(MARKER + json.dumps({"load_error": detail, "stdout": load_out.getvalue()}))
         return
 
-    runner = run_class if spec["mode"] == "class" else run_function
+    runner = {"class": run_class, "script": run_script}.get(spec["mode"], run_function)
     for args in spec["tests"]:
         out = io.StringIO()
         start = time.perf_counter()

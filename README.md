@@ -23,7 +23,8 @@ Open http://127.0.0.1:5000.
 
 | Page | What it does |
 |---|---|
-| **Problems** (`/`) | 35 problems: Graphs (5), Queues (4), Caching (4), Python OOP (2), Fundamentals (12), APIs (8). Shows solved ticks and best times |
+| **Problems** (`/`) | 41 problems: Multi-part (6), Graphs (5), Queues (4), Caching (4), Python OOP (2), Fundamentals (12), APIs (8). Shows solved ticks and best times |
+| **Multi-part** | Question-bank style rounds (durable cache, IPv4/CIDR iterator, monster battle, file dedup, cluster messaging, GPU credits). Parts unlock one at a time as your tests pass; earlier parts' tests keep running; discussion follow-ups appear at the end |
 | **Problem** (`/problem/<id>`) | Description, *Twists to try*, Java tips, test list, editor, *Run tests* (Ctrl/⌘+Enter), *Show solution*, and a **timer** with target times (Easy 10 min, Medium 20 min) |
 | **Study Plan** (`/plan`) | 3-week schedule in priority order, coding-round playbook, behavioural/mindset prep, progress per category |
 | **System Design** (`/system-design`) | End-to-end interview framework, clarifying-question checklist, building blocks (LB, API gateway, queues, caches…), trade-offs, and 9 deliberately vague prompts with a 45-min mock timer, notes, and reveal-after sections |
@@ -65,6 +66,12 @@ Append a dict to `problems/focus.py`, `problems/algorithms.py` or `problems/api.
     # optional: "followups": ["twist 1", "twist 2"]  (shown as "Twists to try")
 }
 ```
+
+Multi-part problems (`problems/multipart.py`) use `"mode": "script"`: each test is a
+Python snippet that runs with the solution's names in scope plus a fresh `tmpdir`, and
+stores its answer in `result`. Tests carry a `"part"` number, the problem has `"parts"`
+(title + description) and `"discussion"` prompts. Test-only helpers (cluster
+simulator, file-tree fixtures, read tracking) live in `practice_helpers.py`.
 
 Then run the tests — they check every reference solution passes and every starter fails:
 

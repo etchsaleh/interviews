@@ -159,3 +159,11 @@ button.small-btn { padding: 2px 8px; font-size: 0.8em; }
 .sd-notes { width: 100%; font: 14px/1.5 var(--mono); background: var(--code-bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; resize: vertical; }
 .sd-prompt details { border-top: 1px solid var(--border); padding: 8px 0; }
 .sd-prompt summary { cursor: pointer; font-weight: 600; }
+
+/* Multi-part problems */
+.part-progress { margin: 14px 0 4px; font-size: 0.85em; font-weight: 600; color: var(--accent); }
+.part { border-top: 1px solid var(--border); margin-top: 14px; }
+.part h2 { font-size: 1.1em; margin: 14px 0 6px; }
+.part-status { color: var(--pass); font: 600 0.8em var(--mono); margin-left: 6px; }
+.part-locked { margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--border); }
+pre.test-code { margin: 4px 0; padding: 8px 10px; font-size: 0.82em; white-space: pre-wrap; }

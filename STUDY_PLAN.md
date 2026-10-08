@@ -50,6 +50,11 @@ and adaptability** beat memorised solutions.
 
 - **Every day:** 2 problems from a blank editor under the timer, each followed by a twist.
   Mix the categories; don't know in advance which technique is coming.
+- **Every day:** one **multi-part** problem as a full mock round (≈45 min). Parts
+  unlock one at a time like the real thing. Finish with the discussion follow-ups out loud:
+  [Durable cache](/problem/mp-durable-cache), [IPv4 iterator](/problem/mp-ip-iterator),
+  [Monster battle](/problem/mp-monster-battle), [File dedup](/problem/mp-file-dedup),
+  [Cluster messages](/problem/mp-cluster-messages), [GPU credits](/problem/mp-gpu-credits).
 - **Every other day:** one 45-minute system design mock: *File uploads*, *Slow dashboard*,
   *Job scheduler*, *Webhooks*. Record yourself or practise with a friend.
 - Fill gaps: [Top K Frequent](/problem/top-k-frequent),
