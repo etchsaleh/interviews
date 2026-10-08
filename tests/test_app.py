@@ -56,8 +56,8 @@ def test_infinite_loop_times_out(monkeypatch):
 
 
 def test_pages_render(client):
-    for path in ["/", "/guide", "/plan", "/system-design", "/playground", "/problem/two-sum", "/problem/api-retry",
-                 "/problem/ttl-cache"]:
+    for path in ["/", "/guide", "/plan", "/system-design", "/fde", "/playground", "/problem/two-sum",
+                 "/problem/api-retry", "/problem/ttl-cache", "/problem/ai-agent-loop"]:
         resp = client.get(path)
         assert resp.status_code == 200, path
     assert client.get("/problem/nope").status_code == 404
@@ -205,3 +205,40 @@ def test_gpu_reference_matches_brute_force():
             assert ref.get_balance(q) == naive.get_balance(q)
         for q in range(75):
             assert ref.get_balance(q) == naive.get_balance(q)
+
+
+# ------------------------------------------------------------------ mock LLM
+def _llm(live_server, body, headers=None):
+    h = {"x-api-key": "sk-test", "anthropic-version": "2023-06-01"}
+    h.update(headers or {})
+    return requests.post(f"{live_server}/mock/llm/v1/messages", json=body, headers=h)
+
+
+def test_mock_llm_validates_like_the_real_api(live_server):
+    ok = {"model": "m", "max_tokens": 10, "messages": [{"role": "user", "content": "hi"}]}
+    assert _llm(live_server, ok).status_code == 200
+    assert _llm(live_server, ok, {"x-api-key": ""}).status_code == 401
+    bad_role = dict(ok, messages=[{"role": "system", "content": "x"}, {"role": "user", "content": "hi"}])
+    assert "top-level" in _llm(live_server, bad_role).json()["error"]["message"]
+    no_alternation = dict(ok, messages=[{"role": "user", "content": "a"}, {"role": "user", "content": "b"}])
+    assert _llm(live_server, no_alternation).status_code == 400
+    orphan_result = dict(ok, messages=[{"role": "user", "content": [
+        {"type": "tool_result", "tool_use_id": "toolu_x", "content": "r"}]}])
+    assert _llm(live_server, orphan_result).status_code == 400
+
+
+def test_mock_llm_response_shape(live_server):
+    body = _llm(live_server, {"model": "m", "max_tokens": 10, "system": "S",
+                              "messages": [{"role": "user", "content": "hi"}]}).json()
+    assert body["type"] == "message" and body["stop_reason"] == "end_turn"
+    assert "".join(b["text"] for b in body["content"] if b["type"] == "text") == "(S) Echo: hi"
+    assert set(body["usage"]) == {"input_tokens", "output_tokens"}
+
+
+def test_study_plan_and_fde_links_resolve(client):
+    import re
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    for doc in ("STUDY_PLAN.md", "FDE.md"):
+        for pid in re.findall(r"\(/problem/([\w-]+)\)", (root / doc).read_text()):
+            assert pid in BY_ID, (doc, pid)

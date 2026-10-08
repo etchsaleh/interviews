@@ -19,12 +19,15 @@ from flask import Flask, abort, jsonify, render_template, request
 from markupsafe import Markup
 
 import mock_api
+import mock_llm
 from problems import ALL_PROBLEMS, BY_ID, CATEGORY_NOTES, CATEGORY_ORDER
 from runner import run_solution
+import fde
 from system_design import PROMPTS as DESIGN_PROMPTS
 
 app = Flask(__name__)
 app.register_blueprint(mock_api.bp)
+app.register_blueprint(mock_llm.bp)
 
 HERE = Path(__file__).parent
 # Minutes to aim for per difficulty - the real risk in the coding round is running out of time.
@@ -106,6 +109,30 @@ def system_design():
         "system_design.html",
         guide_md=(HERE / "SYSTEM_DESIGN.md").read_text(encoding="utf-8"),
         prompts=DESIGN_PROMPTS,
+        page_title="System Design",
+        prompts_heading="8. Practice prompts",
+        store_prefix="sd-",
+        labels={
+            "minutes": 45,
+            "clarify": "Clarifying questions to ask",
+            "requirements": "Requirements a good candidate would land on",
+            "design": "One reasonable design",
+            "tradeoffs": "Trade-offs to discuss",
+            "placeholder": "Your clarifying questions, assumptions, requirements, components, trade-offs… (saved in this browser)",
+        },
+    )
+
+
+@app.get("/fde")
+def fde_page():
+    return render_template(
+        "system_design.html",
+        guide_md=(HERE / "FDE.md").read_text(encoding="utf-8"),
+        prompts=fde.SCENARIOS,
+        page_title="FDE Scenarios",
+        prompts_heading=None,
+        store_prefix="fde-",
+        labels={**fde.LABELS, "placeholder": "What you'd say: questions, plan, recommendation… (saved in this browser)"},
     )
 
 

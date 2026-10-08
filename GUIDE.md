@@ -666,7 +666,120 @@ Other stdlib helpers worth knowing: `itertools.permutations`, `combinations`, `p
 
 ---
 
-## 15. Writing Python fast under time pressure
+## 15. LLM apps in Python (for applied AI / FDE roles)
+
+Applied-AI interviews expect you to call a model API, run a tool loop, and validate what
+comes back, without looking anything up. The *Applied AI* problems drill exactly this
+against a mock server with the same shape.
+
+### The raw HTTP shape (Anthropic Messages API)
+
+```python
+import requests
+
+resp = requests.post(
+    "https://api.anthropic.com/v1/messages",
+    headers={"x-api-key": API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json"},
+    json={
+        "model": "claude-opus-5-5",
+        "max_tokens": 16000,
+        "system": "You are a helpful assistant.",          # top-level, NOT a message
+        "messages": [{"role": "user", "content": "Hello"}],  # roles alternate user/assistant
+    },
+    timeout=60,
+)
+resp.raise_for_status()
+message = resp.json()
+text = "".join(b["text"] for b in message["content"] if b["type"] == "text")
+```
+
+- `content` is a **list of blocks** (`text`, `tool_use`, `thinking`...). Always filter by `type`.
+- `stop_reason` tells you why it stopped: `end_turn`, `tool_use`, `max_tokens`, `refusal`...
+- Errors come back as `{"type": "error", "error": {"type": "...", "message": "..."}}`.
+  Retry **429** (rate limit, honour `retry-after`), **529** (overloaded) and **5xx**; don't retry other 4xx.
+
+### The same with the official SDK
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()           # reads ANTHROPIC_API_KEY; retries 429/5xx itself (max_retries=2)
+response = client.messages.create(
+    model="claude-opus-5-5",
+    max_tokens=16000,
+    system="You are a helpful assistant.",
+    messages=[{"role": "user", "content": "Hello"}],
+)
+for block in response.content:
+    if block.type == "text":
+        print(block.text)
+```
+
+In real projects, use the SDK. It handles retries, timeouts and typed errors
+(`anthropic.RateLimitError`, `anthropic.APIStatusError`...). Practising the raw shape is still
+worth it: it's what you debug with, and what you write when an SDK isn't allowed.
+
+### The tool-use loop
+
+```python
+messages = [{"role": "user", "content": task}]
+while True:
+    reply = call_model(messages, tools=TOOL_SPECS)   # TOOL_SPECS: [{"name", "description", "input_schema"}]
+    if reply["stop_reason"] != "tool_use":
+        break
+    messages.append({"role": "assistant", "content": reply["content"]})   # keep the tool_use blocks
+    results = []
+    for block in reply["content"]:
+        if block["type"] == "tool_use":
+            try:
+                out = HANDLERS[block["name"]](**block["input"])
+                results.append({"type": "tool_result", "tool_use_id": block["id"], "content": json.dumps(out)})
+            except Exception as exc:
+                results.append({"type": "tool_result", "tool_use_id": block["id"],
+                                "content": str(exc), "is_error": True})
+    messages.append({"role": "user", "content": results})   # ALL results in ONE user message
+```
+
+Cap the number of iterations, log every step, and put approval gates in front of
+destructive tools.
+
+### Getting structured data back
+
+- Ask for JSON only, then **parse and validate** (types, required fields, formats). Never trust it blindly.
+- On failure, **continue the conversation** with what was wrong, and cap the attempts.
+- In production prefer schema-constrained output (the API's structured outputs or a tool
+  with a strict input schema) so invalid JSON can't happen in the first place.
+
+### Concurrency for batches
+
+```python
+from concurrent.futures import ThreadPoolExecutor
+
+with ThreadPoolExecutor(max_workers=8) as pool:          # threads are fine: the work is waiting on I/O
+    answers = list(pool.map(ask, prompts))               # map keeps input order
+
+# asyncio version (with an async HTTP client or anthropic.AsyncAnthropic):
+import asyncio
+sem = asyncio.Semaphore(8)
+async def bounded(p):
+    async with sem:
+        return await ask_async(p)
+answers = await asyncio.gather(*(bounded(p) for p in prompts))   # also keeps order
+```
+
+For big offline jobs, the Message Batches API is cheaper and has no rate-limit juggling.
+
+### Evals in one paragraph
+
+Keep a set of real inputs with expected outputs or rubrics, grade them automatically
+(exact match, programmatic checks, or an LLM judge you've checked against human labels),
+and run the set on every prompt, model or retrieval change. Track the score **per
+category**, not just the average. In an interview, "how would you know it works?" is
+usually the most important question.
+
+---
+
+## 16. Writing Python fast under time pressure
 
 Candidates who don't use Python tend not to finish on time, so speed is the point of the switch.
 These save the most minutes:
@@ -693,7 +806,7 @@ These save the most minutes:
 
 ---
 
-## 16. How to use this app
+## 17. How to use this app
 
 1. Follow the **Study Plan**. Start each problem and the timer starts on your first keystroke. Targets: Easy 10 min, Medium 20 min.
 2. Read the problem, then the **Coming from Java** tab for the Python idioms that problem exercises.

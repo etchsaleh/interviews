@@ -59,6 +59,8 @@ ENDPOINTS = [
     ("GET", "/flaky?key=<k>", "503, 503, 200, repeat (per key)"),
     ("GET", "/price/<sku>?client=<id>", "Slow price lookup (counts calls per client)"),
     ("ANY", "/echo", "Echoes your method, query params, JSON body and headers"),
+    ("POST", "/llm/v1/messages", "Mock LLM with the Messages API shape (needs x-api-key + anthropic-version headers)"),
+    ("GET", "/llm/stats?key=<api key>", "How many requests an API key made to the mock LLM"),
 ]
 
 

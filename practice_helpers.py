@@ -154,3 +154,50 @@ def track_file_reads(root):
         yield opened, bytes_read
     finally:
         builtins.open = io.open = real_open
+
+
+# ------------------------------------------------------------------- mock LLM
+def new_key():
+    """A fresh API key, so each test gets its own request counters on the mock LLM."""
+    import uuid
+    return "sk-mock-" + uuid.uuid4().hex[:16]
+
+
+def llm_stats(base_url, key):
+    """{"attempts": requests made with this key, "max_in_flight": peak concurrency}."""
+    import json
+    import urllib.request
+    with urllib.request.urlopen(f"{base_url}/llm/stats?key={key}", timeout=5) as resp:
+        return json.loads(resp.read())
+
+
+def agent_tools():
+    """Tool specs + handlers for the agent problems, and a log of the calls made."""
+    log = []
+    weather = {"Dubai": "34°C and sunny", "Toronto": "8°C and cloudy", "Loopville": "fine"}
+    permits = {"P-17": {"permit_id": "P-17", "status": "approved", "inspector": "Layla Haddad"}}
+    inspectors = {"Layla Haddad": {"name": "Layla Haddad", "phone": "+971-4-555-0117"}}
+
+    def get_weather(city):
+        log.append(["get_weather", city])
+        if city not in weather:
+            raise ValueError(f"unknown city: {city}")
+        return weather[city]
+
+    def lookup_permit(permit_id):
+        log.append(["lookup_permit", permit_id])
+        return permits[permit_id]
+
+    def get_inspector(name):
+        log.append(["get_inspector", name])
+        return inspectors[name]
+
+    def spec(name, description, field):
+        return {"name": name, "description": description,
+                "input_schema": {"type": "object", "properties": {field: {"type": "string"}}, "required": [field]}}
+
+    specs = [spec("get_weather", "Current weather for a city.", "city"),
+             spec("lookup_permit", "Look up a building permit by id. Returns a JSON object.", "permit_id"),
+             spec("get_inspector", "Contact details for a permit inspector. Returns a JSON object.", "name")]
+    handlers = {"get_weather": get_weather, "lookup_permit": lookup_permit, "get_inspector": get_inspector}
+    return specs, handlers, log

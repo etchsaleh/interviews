@@ -45,8 +45,8 @@
       </div>
     {% endif %}
     {% if problem.needs_base_url %}
-      <p class="callout">Mock API for this session: <code>{{ base_url }}</code> — try
-        <a href="{{ base_url }}/users" target="_blank">{{ base_url }}/users</a>.</p>
+      <p class="callout">Mock server for this session: <code>{{ base_url }}</code>.
+        <a href="{{ base_url }}" target="_blank">Open it</a> to see every endpoint.</p>
     {% endif %}
   </div>
   <div class="tab-panel prose" id="tab-tip" hidden>

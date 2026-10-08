@@ -13,6 +13,21 @@ What *not* to do: grind hundreds of LeetCode problems or go deep on API edge cas
 Questions come from the company's own bank with a custom twist, so **solid fundamentals
 and adaptability** beat memorised solutions.
 
+## Track for FDE / applied AI roles (e.g. Brain Co.)
+
+Deployed-engineer roles weigh practical AI building and customer judgement as much as
+DSA. Read [FDE Scenarios](/fde) first: it summarises what Brain Co.'s postings ask for.
+Then, on top of the plan below:
+
+| When | Add |
+|---|---|
+| Week 1 | Guide §15 *LLM apps in Python*. [LLM API Client](/problem/ai-llm-client) parts 1–2 |
+| Week 2 | Finish [LLM API Client](/problem/ai-llm-client), [Agent Tool-Use Loop](/problem/ai-agent-loop), [RAG: Chunk, Retrieve, Evaluate](/problem/ai-rag-retrieval). One FDE scenario every other day, out loud |
+| Week 3 | [Sensor Data Pipeline](/problem/ai-sensor-pipeline) as a timed mock. The four *Applied AI* system design prompts (government permits, hospital, LLM gateway, eval & monitoring). Rehearse your behavioural stories |
+| Outside this app | Build one small full-stack feature in React + TypeScript + a REST API + a database, timed. The postings list that stack, and this app only covers Python |
+
+If time is short, cut Fundamentals and the API refresher before cutting these.
+
 ## How to practise a problem
 
 1. **Time it.** The timer starts on your first keystroke. Targets: Easy 10 min, Medium 20 min.

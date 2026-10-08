@@ -258,4 +258,124 @@ PROMPTS = [
             "Filter ACLs at retrieval time (secure) vs post-filtering (can leak or return empty results).",
         ],
     },
+    # ---------------------------------------------- applied AI / deployed (FDE) prompts
+    {
+        "id": "ai-permitting",
+        "title": "AI-assisted building permits for a government",
+        "level": "Applied AI",
+        "brief": "A national government takes months to approve building permits. They want AI to make it much faster. You're on site next week. Design it.",
+        "clarify": [
+            "Where does the time actually go today: intake completeness, document review, back-and-forth with applicants, inspections, queueing?",
+            "Who are the users: applicants, reviewers, inspectors, managers? What does each need?",
+            "What can legally be automated, and what must a human official sign off? Is there an audit or appeal process?",
+            "Volumes: applications per month, documents per application (drawings, PDFs, scans, Arabic and English?)",
+            "Constraints: data residency, sovereign cloud or on-prem, existing systems to integrate with (case management, GIS, payments)",
+            "How will we measure success: median days to decision, % of complete-on-first-submission, reviewer hours saved?",
+        ],
+        "requirements": """
+- **Functional:** completeness check at intake, extraction of key fields from drawings and forms, automated rule checks against codes (setbacks, heights, zoning) with citations, a reviewer workbench with AI suggestions, applicant feedback, and a full audit trail.
+- **Non-functional:** a human decides every approval; every AI output is traceable to its sources; data stays in-country; it runs well with patchy connectivity at field offices; bilingual.
+- **Success metric agreed up front:** e.g. cut median time-to-decision from 90 to 20 days within 6 months, without raising the appeal rate.
+""",
+        "design": """
+- **Start with a pilot slice:** one permit type in one municipality, with an end-to-end measurable outcome. Expand after it proves out.
+- **Intake service:** uploads to object storage in-country, then OCR and layout parsing, then **LLM extraction** into a structured application record (validated against a schema, with confidence and source spans).
+- **Rules engine + LLM:** codified rules (deterministic checks on extracted numbers) are the source of truth; the LLM handles unstructured parts (reading notes on drawings, matching code clauses via **RAG over the regulations**) and always cites.
+- **Reviewer workbench (React):** queue, side-by-side document and extracted fields, flagged issues with evidence, one-click requests to the applicant. Reviewer edits flow back as **labeled data**.
+- **Async pipeline:** a queue plus workers per stage, idempotent and retryable; status per application.
+- **Evals and monitoring:** a golden set of past applications with known outcomes; field-level extraction accuracy; precision/recall of flagged issues; drift dashboards; human override rate.
+- **Security:** in-country hosting (sovereign cloud or on-prem GPUs/managed model in-region), RBAC by role and municipality, PII redaction in logs, immutable audit log.
+""",
+        "tradeoffs": [
+            "Hosted frontier model in-region vs open-weights model on-prem: quality and speed of iteration vs data control and cost.",
+            "Rules engine vs LLM judgement for code compliance: auditability vs coverage of messy inputs (use both, rules win on conflicts).",
+            "Automate decisions vs assist reviewers: legal risk and trust; start with assist plus measurable time savings.",
+            "Big-bang rollout vs one permit type first: speed of impact vs risk; the pilot creates the eval data you need anyway.",
+        ],
+    },
+    {
+        "id": "ai-hospital",
+        "title": "Clinical documentation assistant for a health system",
+        "level": "Applied AI",
+        "brief": "A national health system's doctors spend hours a day on discharge summaries and notes. Build something that helps.",
+        "clarify": [
+            "Which documents first: discharge summaries, referral letters, progress notes? Who signs them?",
+            "Where does the source data live: EHR vendor, HL7/FHIR APIs, scanned records? Can we write back?",
+            "Clinical safety: what's the regulatory framing, and who is accountable for errors?",
+            "Latency: does the doctor wait at the bedside, or can drafts be prepared overnight?",
+            "PHI rules: can data leave the hospital network? Retention? Audit requirements?",
+        ],
+        "requirements": """
+- **Functional:** generate a draft from the patient record, with every statement linked to its source; the clinician edits and signs; write back to the EHR.
+- **Non-functional:** no PHI leaves the approved boundary; every draft is reviewed by a human; per-statement provenance; usable during peak ward rounds.
+""",
+        "design": """
+- **Integration layer:** FHIR API (or HL7 feed) adapters into a normalized patient timeline; least-privilege access per encounter.
+- **Draft generation:** a template per document type; retrieve relevant timeline items; LLM drafts **with citations to record entries**; a verifier pass flags unsupported statements, medication or dose mismatches, and missing sections.
+- **Clinician UI:** draft beside its sources, highlight anything unsupported, edit, sign, write back. Track edit distance as a quality signal.
+- **Precompute:** draft overnight for scheduled discharges; on-demand for the rest.
+- **Safety and evals:** a clinician-reviewed eval set, error taxonomy (omission, hallucination, wrong dose), staged rollout by ward, kill switch.
+""",
+        "tradeoffs": [
+            "Precomputed drafts (fast, may be stale) vs on-demand (fresh, slower).",
+            "One general prompt vs per-document templates: flexibility vs consistency and testability.",
+            "Strict verification (more flags, more friction) vs fewer flags (risk of missed errors).",
+        ],
+    },
+    {
+        "id": "ai-gateway",
+        "title": "Enterprise LLM gateway",
+        "level": "Applied AI",
+        "brief": "Every team at a global energy company wants to use LLMs. Security is nervous and finance wants to know what it costs. Design the platform.",
+        "clarify": [
+            "How many teams and apps, and what kinds of workloads: chat, batch document processing, agents?",
+            "Which models and providers are allowed? Any on-prem requirement?",
+            "What does security need: PII and secret redaction, prompt-injection defences, logging, data residency?",
+            "How should cost be attributed: per team, per app, per user? Budgets and hard limits?",
+        ],
+        "requirements": """
+- **Functional:** a single API for all model calls, authentication via company SSO and service identities, per-team quotas and budgets, routing and fallbacks between models/regions, logging and cost dashboards, prompt/response policies.
+- **Non-functional:** small latency overhead; streaming support; highly available (a gateway outage takes down every AI feature); no sensitive data in logs.
+""",
+        "design": """
+- **Gateway service** (stateless, behind a load balancer): auth, request validation, policy checks (redaction, allow-listed models), **rate limiting and budgets** in Redis, routing with retries and fallbacks, streaming passthrough.
+- **Usage pipeline:** emit usage events (tokens, cost, latency, team) to a queue, then a warehouse; dashboards and alerts on budget burn.
+- **Caching:** exact-match response cache for deterministic batch calls; encourage provider prompt caching for shared prefixes.
+- **Safety:** input/output filters, audit log with hashed or redacted content, per-app system prompts managed centrally.
+- **Developer experience:** SDK-compatible endpoint so teams use standard client libraries with a different base URL.
+""",
+        "tradeoffs": [
+            "Central gateway (control, visibility) vs direct provider access (less latency, no single point of failure).",
+            "Logging full prompts (debuggability) vs privacy (redact, sample, or store encrypted with access controls).",
+            "Hard budget cut-offs vs soft alerts: protecting spend vs breaking production features.",
+        ],
+    },
+    {
+        "id": "ai-evals-monitoring",
+        "title": "Quality is slipping in a deployed AI feature",
+        "level": "Applied AI",
+        "brief": "Our AI assistant is live at a client. They say answers 'got worse' this month. Design how we find out what happened and make sure we catch it next time.",
+        "clarify": [
+            "What changed this month: model version, prompts, retrieval index, data sources, user population, traffic volume?",
+            "What does 'worse' mean to them? Do we have examples, and how many?",
+            "What do we log today: inputs, outputs, retrieved documents, latency, user feedback?",
+            "Who can label data, and how fast?",
+        ],
+        "requirements": """
+- **Immediate:** reproduce, triage and fix the regression with evidence the client accepts.
+- **Ongoing:** offline evals gate every change (prompt, model, index); online monitoring catches drift; a feedback loop turns complaints into test cases.
+""",
+        "design": """
+- **Triage:** collect the reported bad cases; diff the deployed configuration over time (prompt and model versions, index build); replay bad cases against old and new configurations to bisect.
+- **Eval set:** a curated golden set (real queries, expected answers or rubrics), categories for each failure type; graders (exact match, programmatic checks, LLM-as-judge calibrated against human labels).
+- **CI for AI:** every change runs the eval suite; block on regressions per category, not only the average.
+- **Production monitoring:** log traces with versions; sample outputs for review; track feedback rate, escalation rate, refusal rate, retrieval hit rate, latency, cost; alert on shifts.
+- **Process:** a weekly review with the client's domain experts; new failures become eval cases.
+""",
+        "tradeoffs": [
+            "LLM-as-judge (cheap, scalable) vs human review (trusted, slow); calibrate one against the other.",
+            "Pinning model versions (stability) vs upgrading (quality, cost) behind an eval gate.",
+            "Logging everything (debuggability) vs data minimisation for the client's privacy rules.",
+        ],
+    },
 ]

@@ -63,11 +63,13 @@ def run_class(namespace, entry, args):
 
 
 def run_script(namespace, entry, args):
-    """Multi-part problems: args = [python_snippet]. The snippet sees the user's code plus a
-    fresh `tmpdir`, and stores its answer in `result`."""
+    """Multi-part problems: args = [python_snippet] (or [base_url, snippet]). The snippet sees
+    the user's code plus a fresh `tmpdir` (and `base_url`), and stores its answer in `result`."""
     scope = dict(namespace)
     scope["tmpdir"] = tempfile.mkdtemp(prefix="t", dir=os.getcwd())
-    exec(compile(args[0], "<test>", "exec"), scope)
+    if len(args) > 1:  # problems that talk to the mock server get its URL first
+        scope["base_url"] = args[0]
+    exec(compile(args[-1], "<test>", "exec"), scope)
     return scope.get("result")
 
 
