@@ -96,3 +96,9 @@ def test_uncached_price_lookups_fail(live_server):
     report = run_solution(BY_ID["cached-prices"], naive, base_url=f"{live_server}/mock")
     passed = [c["passed"] for c in report["cases"]]
     assert passed == [False, False, True]  # right prices but too many calls; empty list is trivially fine
+
+
+def test_mock_index_lists_endpoints(client):
+    for path in ["/mock", "/mock/"]:
+        body = client.get(path).get_json()
+        assert any(e["path"] == "/users" for e in body["endpoints"]), path

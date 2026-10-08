@@ -48,6 +48,32 @@ def _error(message, status):
     return jsonify({"error": message}), status
 
 
+ENDPOINTS = [
+    ("GET", "/users", "All users. Query params: team=<name>, active=true|false"),
+    ("GET", "/users/<id>", "One user, or 404"),
+    ("GET", "/orders?page=N", "Paginated orders; next_page is null on the last page"),
+    ("POST", "/todos", 'Create a todo from JSON {"title": "..."} -> 201'),
+    ("GET", "/todos/<id>", "One todo, or 404"),
+    ("POST", "/login", 'JSON {"username": "ada", "password": "lovelace"} -> {"token": ...}'),
+    ("GET", "/profile", "Needs header Authorization: Bearer <token>"),
+    ("GET", "/flaky?key=<k>", "503, 503, 200, repeat (per key)"),
+    ("GET", "/price/<sku>?client=<id>", "Slow price lookup (counts calls per client)"),
+    ("ANY", "/echo", "Echoes your method, query params, JSON body and headers"),
+]
+
+
+@bp.get("", strict_slashes=False)
+def index():
+    """GET /mock - lists the available endpoints."""
+    base = request.base_url.rstrip("/")
+    return jsonify({
+        "base_url": base,
+        "endpoints": [
+            {"method": m, "path": path, "url": base + path, "description": d} for m, path, d in ENDPOINTS
+        ],
+    })
+
+
 @bp.get("/users")
 def list_users():
     team = request.args.get("team")
