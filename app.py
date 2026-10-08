@@ -57,6 +57,7 @@ def public_view(problem):
         "java_tip": problem["java_tip"],
         "starter": problem["starter"],
         "followups": problem.get("followups", []),
+        "editorial": problem.get("editorial"),
         "target_minutes": problem.get("target_minutes", TARGET_MINUTES[problem["difficulty"]]),
         "mode": problem.get("mode", "function"),
         "parts": problem.get("parts", []),

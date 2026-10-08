@@ -61,9 +61,9 @@ def test_pages_render(client):
         resp = client.get(path)
         assert resp.status_code == 200, path
     assert client.get("/problem/nope").status_code == 404
-    # The reference solution must never leak into the page itself.
+    # The reference solution must never leak into the page itself (the editorial may quote snippets).
     page = client.get("/problem/two-sum").get_data(as_text=True)
-    assert "seen[num] = i" not in page
+    assert "seen = {}  # value -> index" not in page
 
 
 def test_run_endpoint(live_server):
@@ -242,3 +242,15 @@ def test_study_plan_and_fde_links_resolve(client):
     for doc in ("STUDY_PLAN.md", "FDE.md"):
         for pid in re.findall(r"\(/problem/([\w-]+)\)", (root / doc).read_text()):
             assert pid in BY_ID, (doc, pid)
+
+
+def test_leetcode_style_problems_have_editorials(client):
+    from problems import EDITORIAL_CATEGORIES
+    missing = [p["id"] for p in ALL_PROBLEMS if p["category"] in EDITORIAL_CATEGORIES and not p.get("editorial")]
+    assert not missing, missing
+    page = client.get("/problem/two-sum").get_data(as_text=True)
+    assert "Reveal editorial" in page and "Kadane" not in page
+
+
+def test_every_problem_has_a_known_difficulty():
+    assert {p["difficulty"] for p in ALL_PROBLEMS} <= {"Easy", "Medium", "Hard"}

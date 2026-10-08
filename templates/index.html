@@ -8,6 +8,13 @@
      <a href="{{ url_for('guide') }}">Java → Python guide</a> open, and beat the target times:
      Easy {{ targets.Easy }} min, Medium {{ targets.Medium }} min.</p>
   <p class="muted" id="progress"></p>
+  <div class="difficulty-filter" role="group" aria-label="Filter by difficulty">
+    <span class="muted small">Show:</span>
+    <button class="chip active" data-level="all">All</button>
+    <button class="chip" data-level="easy"><span class="badge easy">Easy</span></button>
+    <button class="chip" data-level="medium"><span class="badge medium">Medium</span></button>
+    <button class="chip" data-level="hard"><span class="badge hard">Hard</span></button>
+  </div>
 </section>
 
 {% for category, problems in categories.items() %}
@@ -17,7 +24,7 @@
     <thead><tr><th class="status-col"></th><th>Problem</th><th>Difficulty</th><th class="hide-sm">Topics</th><th>Best</th></tr></thead>
     <tbody>
     {% for p in problems %}
-      <tr data-id="{{ p.id }}">
+      <tr data-id="{{ p.id }}" data-level="{{ p.difficulty|lower }}">
         <td class="status-col"><span class="status" title="Solved">✓</span></td>
         <td><a href="{{ url_for('problem_page', problem_id=p.id) }}">{{ p.title }}</a></td>
         <td><span class="badge {{ p.difficulty|lower }}">{{ p.difficulty }}</span></td>
@@ -49,6 +56,22 @@
       }
     });
     document.getElementById("progress").textContent = solved + " of " + rows.length + " solved";
+
+    // Difficulty filter (remembered in this browser); hides empty categories.
+    function applyFilter(level) {
+      document.querySelectorAll(".chip").forEach(function (c) { c.classList.toggle("active", c.dataset.level === level); });
+      rows.forEach(function (row) { row.hidden = level !== "all" && row.dataset.level !== level; });
+      document.querySelectorAll("section.category").forEach(function (sec) {
+        sec.hidden = !sec.querySelector("tr[data-id]:not([hidden])");
+      });
+      try { localStorage.setItem("difficulty-filter", level); } catch (e) {}
+    }
+    document.querySelectorAll(".chip").forEach(function (chip) {
+      chip.addEventListener("click", function () { applyFilter(chip.dataset.level); });
+    });
+    var saved = "all";
+    try { saved = localStorage.getItem("difficulty-filter") || "all"; } catch (e) {}
+    applyFilter(saved);
   })();
 </script>
 {% endblock %}

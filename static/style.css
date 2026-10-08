@@ -2,7 +2,8 @@
   --bg: #f7f7f8; --surface: #ffffff; --surface-2: #f0f1f4; --border: #e2e4e9;
   --text: #1c1e23; --muted: #6b7080; --accent: #3069d6; --accent-text: #fff;
   --pass: #1f8a4c; --pass-bg: #e7f6ee; --fail: #c4322b; --fail-bg: #fdecea;
-  --easy: #1f8a4c; --medium: #b7791f; --hard: #c4322b;
+  --easy: #1f8a4c; --medium: #a8610a; --hard: #c4322b;
+  --easy-bg: #e7f6ee; --medium-bg: #fdf1dc; --hard-bg: #fdecea;
   --code-bg: #f3f4f7;
   --mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -13,6 +14,7 @@
     --text: #e6e8ee; --muted: #9399a8; --accent: #6b9bff; --accent-text: #0d1220;
     --pass: #4cc38a; --pass-bg: #16301f; --fail: #ff7a72; --fail-bg: #3a1c1b;
     --easy: #4cc38a; --medium: #e6b04f; --hard: #ff7a72;
+    --easy-bg: #16301f; --medium-bg: #3a2c12; --hard-bg: #3a1c1b;
     --code-bg: #242833;
   }
 }
@@ -56,10 +58,21 @@ th { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.04em; color:
 tr.solved .status { visibility: visible; }
 .tags { display: flex; flex-wrap: wrap; gap: 4px; }
 
-.badge { font-size: 0.78em; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); }
-.badge.easy { color: var(--easy); }
-.badge.medium { color: var(--medium); }
-.badge.hard { color: var(--hard); }
+.badge {
+  display: inline-block; font-size: 0.72em; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid transparent; line-height: 1.3; white-space: nowrap;
+  background: var(--surface-2);
+}
+.badge.easy { color: var(--easy); background: var(--easy-bg); border-color: var(--easy); }
+.badge.medium { color: var(--medium); background: var(--medium-bg); border-color: var(--medium); }
+.badge.hard { color: var(--hard); background: var(--hard-bg); border-color: var(--hard); }
+.problem-head .badge { font-size: 0.8em; }
+
+.difficulty-filter { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.chip { font: inherit; background: none; border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; cursor: pointer; color: var(--text); }
+.chip .badge { font-size: 0.7em; }
+.chip.active { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 1px var(--accent); }
+.spoiler { border: 1px dashed var(--border); border-radius: 8px; padding: 12px 14px; }
 .tag { display: inline-block; font-size: 0.75em; color: var(--muted); background: var(--surface-2); padding: 1px 7px; border-radius: 4px; margin: 2px 2px 2px 0; }
 
 /* Problem workspace */

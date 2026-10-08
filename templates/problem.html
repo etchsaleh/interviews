@@ -16,6 +16,7 @@
     <button class="tab active" data-tab="desc">Description</button>
     <button class="tab" data-tab="tip">Coming from Java</button>
     <button class="tab" data-tab="tests">Tests{% if not problem.parts %} ({{ problem.tests|length }}){% endif %}</button>
+    {% if problem.editorial %}<button class="tab" data-tab="editorial">Editorial</button>{% endif %}
   </div>
 
   <div class="tab-panel prose" id="tab-desc">
@@ -53,6 +54,15 @@
     {{ problem.java_tip|md }}
     <p><a href="{{ url_for('guide') }}">Open the full Java → Python guide →</a></p>
   </div>
+  {% if problem.editorial %}
+  <div class="tab-panel prose" id="tab-editorial" hidden>
+    <div class="spoiler" id="editorial-gate">
+      <p>The editorial explains the approach. Try the problem first, then compare.</p>
+      <button class="primary" type="button" onclick="document.getElementById('editorial-gate').hidden = true; document.getElementById('editorial-body').hidden = false;">Reveal editorial</button>
+    </div>
+    <div id="editorial-body" hidden>{{ problem.editorial|md }}</div>
+  </div>
+  {% endif %}
   <div class="tab-panel" id="tab-tests" hidden>
     <ol class="test-preview" id="test-preview"></ol>
   </div>

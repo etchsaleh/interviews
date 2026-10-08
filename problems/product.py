@@ -238,7 +238,7 @@ def create_app(db_path: str, llm_base_url: str | None = None, api_key: str | Non
 PERMITS_API = {
     "id": "product-permit-tracker",
     "title": "Build a Permit Tracker (API + AI feature)",
-    "difficulty": "Medium",
+    "difficulty": "Hard",
     "category": "Product Engineering",
     "tags": ["REST API", "Flask", "SQLite", "workflow", "LLM feature"],
     "entry": "create_app",

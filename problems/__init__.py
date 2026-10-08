@@ -1,5 +1,6 @@
 from problems.algorithms import PROBLEMS as ALGORITHMS
 from problems.applied_ai import PROBLEMS as APPLIED_AI
+from problems.editorials import EDITORIALS
 from problems.api import PROBLEMS as API_PROBLEMS
 from problems.focus import PROBLEMS as FOCUS
 from problems.multipart import PROBLEMS as MULTIPART
@@ -21,5 +22,10 @@ CATEGORY_NOTES = {
 
 ALL_PROBLEMS = sorted(PRODUCT + APPLIED_AI + MULTIPART + ALGORITHMS + FOCUS + API_PROBLEMS, key=lambda p: CATEGORY_ORDER.index(p["category"]))
 BY_ID = {p["id"]: p for p in ALL_PROBLEMS}
+for problem_id, editorial in EDITORIALS.items():
+    BY_ID[problem_id]["editorial"] = editorial
+
+# Categories whose problems are LeetCode-style and must have an editorial.
+EDITORIAL_CATEGORIES = {"Fundamentals", "Graphs", "Queues", "Caching", "Python OOP"}
 
 assert len(BY_ID) == len(ALL_PROBLEMS), "duplicate problem ids"
