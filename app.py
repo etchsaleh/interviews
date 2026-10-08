@@ -2,7 +2,17 @@
 
 Run:  python app.py   then open http://127.0.0.1:5000
 """
+import sys
 from pathlib import Path
+
+if sys.version_info < (3, 10):
+    sys.exit(
+        f"Python 3.10+ is required (you're running {sys.version.split()[0]}).\n"
+        "On macOS the built-in python3 is 3.9. Install a newer one, e.g.:\n"
+        "  brew install python@3.12\n"
+        "  rm -rf .venv && python3.12 -m venv .venv && source .venv/bin/activate\n"
+        "  pip install -r requirements.txt && python app.py"
+    )
 
 import markdown
 from flask import Flask, abort, jsonify, render_template, request

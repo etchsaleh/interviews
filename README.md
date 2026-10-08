@@ -7,8 +7,11 @@ basic Python OOP, a light API refresher, and **system design** practice. It also
 
 ## Run it
 
+Needs **Python 3.10+** (interviews use modern Python, and so does this app). macOS's built-in
+`python3` is 3.9, so install a newer one first: `brew install python@3.12` (or from python.org).
+
 ```bash
-python3 -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python app.py
