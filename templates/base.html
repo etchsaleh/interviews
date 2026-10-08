@@ -14,7 +14,7 @@
       <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint in ('index', 'problem_page') }}">Problems</a>
       <a href="{{ url_for('plan') }}" class="{{ 'active' if request.endpoint == 'plan' }}">Study Plan</a>
       <a href="{{ url_for('system_design') }}" class="{{ 'active' if request.endpoint == 'system_design' }}">System Design</a>
-      <a href="{{ url_for('fde_page') }}" class="{{ 'active' if request.endpoint == 'fde_page' }}">FDE Scenarios</a>
+      <a href="{{ url_for('fde_page') }}" class="{{ 'active' if request.endpoint == 'fde_page' }}">Role Prep</a>
       <a href="{{ url_for('playground') }}" class="{{ 'active' if request.endpoint == 'playground' }}">Playground</a>
       <a href="{{ url_for('guide') }}" class="{{ 'active' if request.endpoint == 'guide' }}">Python Guide</a>
     </nav>

@@ -1,4 +1,4 @@
-# Forward-deployed & applied AI interviews
+# AI product engineering & forward-deployed interviews
 
 Deployed / forward-deployed engineering (FDE), applied AI and product engineering roles
 are judged on more than code. Expect to be evaluated on:
@@ -10,31 +10,97 @@ are judged on more than code. Expect to be evaluated on:
 
 [TOC]
 
-## Brain Co.: what their postings say
+## Brain Co.: the AI Product Engineer, Deployed role
 
-From Brain Co.'s public job postings for *AI Product Engineer, Deployed* and *AI/ML Engineer, Deployed*
-(details vary by posting, so check the one you applied to):
+From Brain Co.'s public postings for **AI Product Engineer, Deployed** (details vary by
+posting, so check the one you applied to):
 
 - Applied AI company building AI platforms and applications for **governments and large institutions**.
   Their published case studies include **construction permitting** for a government, **supply-chain costs**
   for an energy company, and **hospital care** for national health systems.
 - You **work directly with the customer to develop the product spec and build from zero**.
-- Full stack: **React, TypeScript, RESTful APIs, databases**, microservices, cloud platforms.
+- **Front end and back end:** React, TypeScript, RESTful APIs, database management, microservices, cloud platforms.
 - **Integrating data pipelines and sensor networks**; **monitoring and maintaining deployed applications**.
 - **Travel and on-site work**: one posting mentions willingness to travel globally for 6+ months and work
   directly with subject-matter experts and end users.
 
-What that suggests to practise here:
+So the bar is a **product engineer who ships whole features**: spec → API → UI → AI
+feature → deploy → support, with the customer in the room. Practise in this order:
 
-| Theme | Where in this app |
+| Skill | Where |
 |---|---|
-| LLM API client, retries, structured extraction, concurrency | Problems → Applied AI → *LLM API Client* |
-| Agents with tools | *Agent Tool-Use Loop* |
-| Retrieval over regulations + evals | *RAG: Chunk, Retrieve, Evaluate* |
-| Sensor/field data | *Sensor Data Pipeline* |
-| Government / hospital / enterprise system design | System Design → Applied AI prompts |
-| Discovery, scoping, incidents, stakeholders | The scenarios below |
-| React / TypeScript | Not covered by this Python app. Practise building a small full-stack feature (form + list + REST API + DB) in under an hour |
+| Build a backend product in stages, with an AI feature | Problems → Product Engineering → *Build a Permit Tracker* |
+| Build the UI for it in React + TypeScript | The drills below (outside this app) |
+| Write a spec with a customer, prioritise, demo | Scenarios: *Write the spec*, *Prioritise the backlog*, *Discovery*, *Scope creep* |
+| LLM features done properly (retries, structured output, caching) | Applied AI → *LLM API Client*, then *Agent* and *RAG* |
+| Messy field data | Applied AI → *Sensor Data Pipeline* |
+| Product system design | System Design → *AI-assisted building permits*, *Clinical documentation* |
+
+## React + TypeScript drills (do these outside this app)
+
+Build a UI on top of the Permit Tracker API you wrote. Save your solution as
+`permits.py` and run it with `flask --app 'permits:create_app("permits.db")' run` (port 5000
+is taken by this app, so add `--port 5001`). Create the UI with
+`npm create vite@latest permits-ui -- --template react-ts`, and point Vite's dev proxy
+(`server.proxy` in `vite.config.ts`) at `http://127.0.0.1:5001` so the browser doesn't hit
+CORS errors. Time each drill and aim for the targets.
+
+| # | Drill | Done when | Target |
+|---|---|---|---|
+| 1 | **List page** | Fetch `/applications`, show a table, with loading and error states | 20 min |
+| 2 | **Filters + pagination** | Status/type dropdowns, search box (debounced), next/prev; state in the URL | 25 min |
+| 3 | **Create form** | Controlled inputs, client-side validation, show the API's 400 `fields` next to inputs | 25 min |
+| 4 | **Detail + workflow** | Detail page with history timeline; buttons only for allowed transitions; handle 409 | 25 min |
+| 5 | **AI summary panel** | Load the summary lazily, spinner, retry button on 503, "AI-generated" label | 15 min |
+| 6 | **Streaming text** | Render an LLM reply token by token (fake it with a timer if needed); cancel button | 20 min |
+| 7 | **Polish** | Empty states, disabled buttons while saving, optimistic status update with rollback on error | 20 min |
+
+### TypeScript for Java developers (one screen)
+
+```typescript
+type Status = "submitted" | "under_review" | "approved" | "rejected" | "needs_info";  // union of literals ≈ enum
+
+interface Application {            // structural typing: any object with these fields matches
+  id: number;
+  applicant: string;
+  description?: string;            // optional field
+  status: Status;
+}
+
+const apps: Application[] = [];    // const = final reference; let = mutable variable
+const byId = new Map<number, Application>();
+const names = apps.filter(a => a.status === "approved").map(a => a.applicant);  // streams, without .stream()
+
+async function load(page: number): Promise<{ items: Application[]; total: number }> {
+  const res = await fetch(`/applications?limit=20&offset=${page * 20}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+```
+
+- `===` compares without type coercion (always use it). `null` and `undefined` both exist; `a?.b ?? "default"` handles both.
+- Types disappear at runtime, so validate API responses at the boundary if they matter.
+
+### React essentials
+
+```tsx
+function ApplicationList() {
+  const [items, setItems] = useState<Application[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {                          // runs after render; [] = only once on mount
+    load(0).then(r => setItems(r.items)).catch(e => setError(String(e))).finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <p>Loading…</p>;
+  if (error) return <p role="alert">{error}</p>;
+  return <ul>{items.map(a => <li key={a.id}>{a.applicant} — {a.status}</li>)}</ul>;
+}
+```
+
+- State is immutable: `setItems([...items, newItem])`, never `items.push(...)`.
+- Every list item needs a stable `key`. Effects that depend on props or state list them in the dependency array.
 
 ## Running a customer conversation
 
@@ -54,6 +120,7 @@ What that suggests to practise here:
 ## Behavioural stories to prepare (STAR, ~2 minutes each)
 
 - Built something **from zero with a customer**, where the spec changed as you learned.
+- Owned a feature **end to end**: UI, API, data, deploy, and what you learned from users.
 - A **production incident** you owned: detection, fix, follow-up.
 - **Pushed back** on a stakeholder and kept the relationship.
 - Worked in an **unfamiliar domain** quickly (learned from subject-matter experts).

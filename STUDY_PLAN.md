@@ -13,18 +13,16 @@ What *not* to do: grind hundreds of LeetCode problems or go deep on API edge cas
 Questions come from the company's own bank with a custom twist, so **solid fundamentals
 and adaptability** beat memorised solutions.
 
-## Track for FDE / applied AI roles (e.g. Brain Co.)
+## Track for the AI Product Engineer role (Brain Co.)
 
-Deployed-engineer roles weigh practical AI building and customer judgement as much as
-DSA. Read [FDE Scenarios](/fde) first: it summarises what Brain Co.'s postings ask for.
-Then, on top of the plan below:
+The role is about building whole products with the customer: spec → API → UI → AI feature
+→ deployment. Read [Role Prep](/fde) first. Then, on top of the plan below:
 
 | When | Add |
 |---|---|
-| Week 1 | Guide §15 *LLM apps in Python*. [LLM API Client](/problem/ai-llm-client) parts 1–2 |
-| Week 2 | Finish [LLM API Client](/problem/ai-llm-client), [Agent Tool-Use Loop](/problem/ai-agent-loop), [RAG: Chunk, Retrieve, Evaluate](/problem/ai-rag-retrieval). One FDE scenario every other day, out loud |
-| Week 3 | [Sensor Data Pipeline](/problem/ai-sensor-pipeline) as a timed mock. The four *Applied AI* system design prompts (government permits, hospital, LLM gateway, eval & monitoring). Rehearse your behavioural stories |
-| Outside this app | Build one small full-stack feature in React + TypeScript + a REST API + a database, timed. The postings list that stack, and this app only covers Python |
+| Week 1 | [Permit Tracker](/problem/product-permit-tracker) parts 1–3. Guide §15 *LLM apps in Python*. React drills 1–2. Scenarios: *Discovery*, *Write the spec* |
+| Week 2 | [Permit Tracker](/problem/product-permit-tracker) parts 4–5. [LLM API Client](/problem/ai-llm-client). React drills 3–5 against your own API. Scenarios: *Prioritise*, *Scope a pilot*, *Scope creep* |
+| Week 3 | Redo the Permit Tracker from a blank editor in under 60 minutes. React drills 6–7. [Agent Tool-Use Loop](/problem/ai-agent-loop), [RAG](/problem/ai-rag-retrieval) and [Sensor Data Pipeline](/problem/ai-sensor-pipeline) as timed mocks. System design: *AI-assisted building permits*. Rehearse your behavioural stories |
 
 If time is short, cut Fundamentals and the API refresher before cutting these.
 

@@ -46,6 +46,70 @@ SCENARIOS = [
         ],
     },
     {
+        "id": "write-spec",
+        "title": "Write the spec with the customer",
+        "level": "Product",
+        "brief": "After discovery, the permit office agrees: applicants should be able to submit and track building-permit applications online instead of by email. You have 30 minutes with their head of permits to agree a v1 spec. Lead it.",
+        "clarify": [
+            "Who are the users (applicants, architects acting for them, reviewers, inspectors), and what does each need to do in v1?",
+            "Walk me through today's process for one application: steps, documents, who touches it, where it waits.",
+            "What must be true on launch day for this to count as a success? Which number do you report to your director?",
+            "What's out of scope for v1: payments, inspections scheduling, integrations?",
+            "Rules we can't break: identity verification, retention, language (Arabic and English?), accessibility.",
+        ],
+        "requirements": """
+- Can you turn a conversation into a **concrete, buildable v1**, and get explicit agreement on it?
+- Do you separate **must-haves from later**, and tie scope to a **success metric**?
+- Do you capture the **data model, workflow and edge cases** an engineer needs?
+""",
+        "design": """
+A one-page spec, written live and read back:
+
+- **Problem and goal:** "Applications arrive by email and get lost; target: 90% submitted online, median 5 days to first review within 3 months."
+- **Users and user stories:** applicant submits with documents; applicant sees status; reviewer works a queue; reviewer requests more info.
+- **v1 scope / not in v1:** explicit lists. Payments, inspections and the AI summary are v2.
+- **Workflow:** statuses and allowed transitions, who can make each move, notifications.
+- **Data:** application fields, documents, history (audit trail).
+- **Screens:** submit form, my applications, reviewer queue, application detail.
+- **Non-functional:** languages, accessibility, data residency, uptime expectations.
+- **Milestones:** clickable prototype in week 1 for feedback, pilot with one district in week 4.
+""",
+        "tradeoffs": [
+            "Writing the spec alone and sending it for approval, instead of building it with them.",
+            "No 'not in v1' list, so everything becomes a must-have.",
+            "Specifying screens before agreeing the workflow and data.",
+            "Leaving without a success metric or a date for first feedback.",
+        ],
+    },
+    {
+        "id": "prioritise",
+        "title": "Prioritise the backlog",
+        "level": "Product",
+        "brief": "Two weeks after launch, you have 14 requests from the client: 3 bugs, 6 feature ideas from reviewers, 4 from applicants, and 'add AI to everything' from the director. You have one engineer (you) for the next sprint. What do you do?",
+        "clarify": [
+            "What's the agreed success metric, and where are we against it?",
+            "Which bugs affect correctness, data or trust, and how many users hit them?",
+            "What does usage data say: where do applicants drop off, where do reviewers spend time?",
+            "What's behind 'add AI to everything'? Is there a specific pain the director has seen?",
+        ],
+        "requirements": """
+- Do you prioritise by **impact on the goal**, using **data**, not by who shouts loudest?
+- Do you handle the senior stakeholder's request **constructively**?
+- Do you **communicate** the plan and what's not happening?
+""",
+        "design": """
+- Bugs that corrupt data or block submissions first, always.
+- Score the rest by impact on the success metric × number of users ÷ effort. Use the funnel data (where applicants abandon) to pick.
+- Turn "AI everywhere" into one concrete, measurable AI feature tied to a real pain (e.g. reviewer summaries, or an intake completeness check that cuts back-and-forth), and propose it as the sprint's headline.
+- Publish the sprint plan: what's in, what's next, what's parked and why. Review with the client at the end of the sprint with numbers.
+""",
+        "tradeoffs": [
+            "Doing the director's request first because they're senior.",
+            "Shipping many small features without measuring any of them.",
+            "Letting bugs that affect trust wait behind new features.",
+        ],
+    },
+    {
         "id": "pilot-scope",
         "title": "Scope a 6-week pilot",
         "level": "Scoping",

@@ -129,7 +129,7 @@ def fde_page():
         "system_design.html",
         guide_md=(HERE / "FDE.md").read_text(encoding="utf-8"),
         prompts=fde.SCENARIOS,
-        page_title="FDE Scenarios",
+        page_title="Role Prep",
         prompts_heading=None,
         store_prefix="fde-",
         labels={**fde.LABELS, "placeholder": "What you'd say: questions, plan, recommendation… (saved in this browser)"},

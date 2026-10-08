@@ -23,13 +23,14 @@ Open http://127.0.0.1:5000.
 
 | Page | What it does |
 |---|---|
-| **Problems** (`/`) | 45 problems: Applied AI (4), Multi-part (6), Graphs (5), Queues (4), Caching (4), Python OOP (2), Fundamentals (12), APIs (8). Shows solved ticks and best times |
+| **Problems** (`/`) | 46 problems: Product Engineering (1), Applied AI (4), Multi-part (6), Graphs (5), Queues (4), Caching (4), Python OOP (2), Fundamentals (12), APIs (8). Shows solved ticks and best times |
+| **Product Engineering** | *Build a Permit Tracker*: a Flask + SQLite backend built in 5 parts (create/validate, review workflow + audit history, search + pagination, persistence, an AI summary feature with caching), graded through Flask's test client |
 | **Applied AI** | Multi-part problems for FDE / applied-AI roles: an LLM API client (retries, structured extraction, bounded concurrency), an agent tool-use loop, RAG chunking/ranking/evals, and a sensor-data pipeline. LLM problems run against a built-in mock of the Messages API, so no API key or network is needed |
 | **Multi-part** | Question-bank style rounds (durable cache, IPv4/CIDR iterator, monster battle, file dedup, cluster messaging, GPU credits). Parts unlock one at a time as your tests pass; earlier parts' tests keep running; discussion follow-ups appear at the end |
 | **Problem** (`/problem/<id>`) | Description, *Twists to try*, Java tips, test list, editor, *Run tests* (Ctrl/⌘+Enter), *Show solution*, and a **timer** with target times (Easy 10 min, Medium 20 min) |
 | **Study Plan** (`/plan`) | 3-week schedule in priority order, coding-round playbook, behavioural/mindset prep, progress per category |
 | **System Design** (`/system-design`) | End-to-end interview framework, clarifying-question checklist, building blocks (LB, API gateway, queues, caches…), trade-offs, and 13 deliberately vague prompts (4 applied-AI ones: government permits, hospital, LLM gateway, eval & monitoring) with a 45-min mock timer, notes, and reveal-after sections |
-| **FDE Scenarios** (`/fde`) | Customer-facing role-plays for deployed-engineer interviews (discovery, pilot scoping, a hallucination in front of the client, air-gapped constraints, scope creep, explaining accuracy, proving ROI), plus what Brain Co.'s postings ask for, behavioural stories and questions to ask |
+| **Role Prep** (`/fde`) | Prep for AI product engineer / deployed roles: what Brain Co.'s AI Product Engineer postings ask for, React + TypeScript drills that build a UI on your Permit Tracker API, a TypeScript-for-Java cheat sheet, and 9 customer role-plays (discovery, writing the spec, prioritising, pilot scoping, a hallucination in front of the client, air-gapped constraints, scope creep, explaining accuracy, proving ROI) |
 | **Playground** (`/playground`) | Run any snippet and see its `print` output |
 | **Guide** (`/guide`) | Java → Python cheat sheet: syntax, collections, comprehensions, classes, sorting, exceptions, `requests`, interview patterns, gotchas |
 | **Mock API** (`/mock/...`) | In-memory REST API the API problems call: users, paginated orders, todos (POST), login + bearer token, a flaky 503 endpoint, `/echo`, and a mock LLM at `/mock/llm/v1/messages` (`mock_llm.py`). Open `/mock` for the list |
