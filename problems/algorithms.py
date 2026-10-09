@@ -487,22 +487,16 @@ climb_stairs(3) -> 3   # 1+1+1, 1+2, 2+1
         "java_tip": """
 - Memoization without a `HashMap`: decorate a recursive function with `@functools.cache` (or `@lru_cache(maxsize=None)`).
 - Functions can be defined inside functions — handy for recursive helpers that close over local variables.
-- Python's default recursion limit is ~1000; prefer an iterative loop for big inputs.
+- Python's default recursion limit is ~1000, so a memoised recursive solution crashes for n = 1,000 (`RecursionError`). Use a loop for big inputs.
 """,
         "starter": """def climb_stairs(n: int) -> int:
     pass
 """,
-        "solution": """from functools import cache
-
-
-def climb_stairs(n: int) -> int:
-    @cache
-    def ways(i: int) -> int:
-        if i <= 2:
-            return i
-        return ways(i - 1) + ways(i - 2)
-
-    return ways(n)
+        "solution": """def climb_stairs(n: int) -> int:
+    a, b = 1, 2  # ways to reach steps 1 and 2
+    for _ in range(n - 1):
+        a, b = b, a + b
+    return a
 """,
         "tests": [
             {"args": [1], "expected": 1},

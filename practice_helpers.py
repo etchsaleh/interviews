@@ -201,3 +201,29 @@ def agent_tools():
              spec("get_inspector", "Contact details for a permit inspector. Returns a JSON object.", "name")]
     handlers = {"get_weather": get_weather, "lookup_permit": lookup_permit, "get_inspector": get_inspector}
     return specs, handlers, log
+
+
+# ------------------------------------------------------------- complexity probes
+class ProbedList(list):
+    """A list that fails a test if a solution reads more than `max_reads` elements.
+
+    Used to check O(log n) algorithms: scanning (`in`, `.index`, iteration) is refused.
+    """
+
+    def __init__(self, items, max_reads):
+        super().__init__(items)
+        self.max_reads = max_reads
+        self.reads = 0
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            raise TypeError("slicing copies the list (O(n)); use indexes")
+        self.reads += 1
+        if self.reads > self.max_reads:
+            raise RuntimeError(f"read more than {self.max_reads} elements: this isn't O(log n)")
+        return super().__getitem__(index)
+
+    def _scan(self, *args):
+        raise TypeError("scanning the whole list is O(n); use indexes")
+
+    __iter__ = __contains__ = __reversed__ = index = count = _scan

@@ -40,7 +40,7 @@ Your code is saved in the browser (localStorage) as you type.
 ## How it works
 
 - `runner.py` writes your code to a temp dir and runs `harness.py` in a **separate Python
-  process** (10 s timeout), which calls your function with each test's arguments and
+  process** (per-test time limits, 20 s overall), which calls your function with each test's arguments and
   reports return values, `print` output and tracebacks.
 - API problems receive `base_url` (pointing at `/mock` on this same server) as their
   first argument, so they make real HTTP calls.

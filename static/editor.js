@@ -52,6 +52,11 @@ var PracticeEditor = (function () {
   }
 
   // Render JSON values the way Python would print them (None/True/False, 'str').
+  function shortRepr(v) {
+    var text = pyRepr(v);
+    return text.length > 600 ? text.slice(0, 600) + " … (" + (text.length - 600) + " more characters)" : text;
+  }
+
   function pyRepr(v) {
     if (v === null || v === undefined) return "None";
     if (v === true) return "True";
@@ -60,6 +65,28 @@ var PracticeEditor = (function () {
     if (typeof v === "number") return String(v);
     if (Array.isArray(v)) return "[" + v.map(pyRepr).join(", ") + "]";
     return "{" + Object.keys(v).map(function (k) { return JSON.stringify(k) + ": " + pyRepr(v[k]); }).join(", ") + "}";
+  }
+
+  // Two-step confirmation inside the page. Browsers and embedded panes can suppress
+  // native confirm dialogs, which made buttons silently do nothing.
+  function confirmClick(button, question, action) {
+    var label = button.textContent, timer = null;
+    button.addEventListener("click", function () {
+      if (button.classList.contains("confirming")) {
+        clearTimeout(timer);
+        button.classList.remove("confirming");
+        button.textContent = label;
+        action();
+        return;
+      }
+      button.classList.add("confirming");
+      button.textContent = question;
+      button.title = "Click again within 4 seconds to confirm";
+      timer = setTimeout(function () {
+        button.classList.remove("confirming");
+        button.textContent = label;
+      }, 4000);
+    });
   }
 
   function el(tag, cls, text) {
@@ -125,6 +152,7 @@ var PracticeEditor = (function () {
     function currentPart() { return Math.min(unlocked(), nParts); }
 
     function inputText(input) {
+      if (input && input.generated) return "# generated input\n" + input.generated.trim();
       if (isScript) return input[0];
       if (isClass) return pyRepr(input[0]) + "\n" + pyRepr(input[1]);
       return callText(entry, input, problem.needs_base_url);
@@ -132,6 +160,7 @@ var PracticeEditor = (function () {
     function caseTitle(c, i) {
       var parts = [(nParts ? "Part " + c.part + " · " : "") + "Test " + (i + 1)];
       if (c.label) parts.push(c.label);
+      if (c.time_limit_ms) parts.push("⏱ " + c.time_limit_ms + " ms limit");
       return parts.join(" · ");
     }
 
@@ -144,7 +173,7 @@ var PracticeEditor = (function () {
         var li = el("li");
         if (nParts || t.label) li.appendChild(el("div", "muted small", caseTitle(t, i)));
         li.appendChild(el("pre", "test-code", inputText(t.input)));
-        li.appendChild(el("div", "muted small", "expected → " + (t.expected_label || pyRepr(t.expected))));
+        li.appendChild(el("div", "muted small", "expected → " + (t.expected_label || (t.expected === null && t.input && t.input.generated ? "computed with the generated input" : shortRepr(t.expected)))));
         preview.appendChild(li);
       });
     }
@@ -202,20 +231,15 @@ var PracticeEditor = (function () {
       renderTestList();
     }
 
-    document.getElementById("btn-reset").addEventListener("click", function () {
-      var what = nParts ? "the starter code, re-locks the later parts and resets the timer" : "the starter code and resets the timer";
-      if (confirm("Start over? This restores " + what + ".")) {
-        editor.set(problem.starter);
-        store(key, null);
-        timer.reset();
-        usedSolution = false;
-        resetParts();
-      }
+    confirmClick(document.getElementById("btn-reset"), "Reset code? Click again", function () {
+      editor.set(problem.starter);
+      store(key, null);
+      timer.reset();
+      usedSolution = false;
+      resetParts();
+      results.innerHTML = "<p class='muted'>Reset to the starter code. Run your code to see test results.</p>";
     });
-    document.getElementById("btn-solution").addEventListener("click", function () {
-      var msg = "Show the reference solution? It replaces your code in the editor (Ctrl/Cmd+Z undoes it)" +
-        (nParts ? " and covers every part, so all parts get unlocked." : ".");
-      if (!confirm(msg)) return;
+    confirmClick(document.getElementById("btn-solution"), "Replace your code? Click again", function () {
       fetch("/api/solution/" + problem.id).then(function (r) { return r.json(); }).then(function (data) {
         usedSolution = true;
         editor.set(data.solution);
@@ -283,9 +307,9 @@ var PracticeEditor = (function () {
           if (!c.passed) d.open = true;
           d.appendChild(el("summary", "", (c.passed ? "✓ " : "✗ ") + caseTitle(c, i) + "  ·  " + c.ms + " ms"));
           d.appendChild(block(isScript ? "test" : "call", inputText(c.input)));
-          d.appendChild(block("expected", c.expected_label || pyRepr(c.expected)));
+          d.appendChild(block("expected", c.expected_label || shortRepr(c.expected)));
           if (c.error) d.appendChild(block("error", c.error, "error"));
-          else d.appendChild(block(isScript ? "result" : "returned", pyRepr(c.actual)));
+          else d.appendChild(block(isScript ? "result" : "returned", shortRepr(c.actual)));
           if (c.stdout) d.appendChild(block("stdout", c.stdout));
           results.appendChild(d);
         });
@@ -322,8 +346,10 @@ var PracticeEditor = (function () {
     var editor = createEditor(document.getElementById("code"), run);
     editor.set(store(key) || starter);
     editor.onChange(function () { store(key, editor.get()); });
-    document.getElementById("btn-reset").addEventListener("click", function () {
-      if (confirm("Reset the playground?")) { editor.set(starter); store(key, null); }
+    confirmClick(document.getElementById("btn-reset"), "Reset? Click again", function () {
+      editor.set(starter);
+      store(key, null);
+      results.innerHTML = "<p class='muted'>Output appears here.</p>";
     });
 
     function run() {

@@ -11,7 +11,7 @@ from harness import MARKER
 
 HARNESS = Path(__file__).with_name("harness.py")
 HELPERS = Path(__file__).with_name("practice_helpers.py")
-TIMEOUT_SECONDS = 10
+TIMEOUT_SECONDS = 20
 RUN_ID = "<run-id>"  # test arg placeholder, replaced with a fresh uuid on every run
 
 
@@ -48,12 +48,21 @@ def run_solution(problem, code, base_url=None, upto=None):
     timeout = problem.get("timeout", TIMEOUT_SECONDS)
     call_args = []
     for t in tests:
+        if "gen" in t:  # large inputs are generated inside the sandbox
+            call_args.append({"__gen__": t["gen"]})
+            continue
         args = [str(uuid.uuid4()) if a == RUN_ID else a for a in t["args"]]
         if problem.get("needs_base_url"):
             args = [base_url] + args
         call_args.append(args)
 
-    spec = {"mode": problem.get("mode", "function"), "entry": problem["entry"], "tests": call_args}
+    spec = {
+        "mode": problem.get("mode", "function"),
+        "entry": problem["entry"],
+        "tests": call_args,
+        "limits": [t.get("time_limit_ms") for t in tests],
+        "budget_s": timeout - 3,
+    }
     workdir = Path(tempfile.mkdtemp(prefix="practice_"))
     try:
         (workdir / "solution.py").write_text(code, encoding="utf-8")
@@ -88,6 +97,8 @@ def run_solution(problem, code, base_url=None, upto=None):
 
     cases = []
     for test, args, res in zip(tests, call_args, payload["results"]):
+        if "expected" in res:  # generated tests compute their expected answer alongside the input
+            test = {**test, "expected": res["expected"]}
         passed = res["error"] is None and is_correct(problem, test, res["actual"], args)
         limit = test.get("time_limit_ms")
         if passed and limit and res["ms"] > limit:
@@ -96,7 +107,7 @@ def run_solution(problem, code, base_url=None, upto=None):
         cases.append({
             "part": test.get("part", 1),
             "time_limit_ms": limit,
-            "input": test["args"],
+            "input": {"generated": test["gen"]} if "gen" in test else test["args"],
             "expected": test.get("expected"),
             "expected_label": test.get("expected_label"),
             "label": test.get("label"),

@@ -63,8 +63,9 @@ def public_view(problem):
         "parts": problem.get("parts", []),
         "discussion": problem.get("discussion", []),
         "tests": [
-            {"input": t["args"], "expected": t.get("expected"), "expected_label": t.get("expected_label"),
-             "part": t.get("part", 1), "label": t.get("label")}
+            {"input": {"generated": t["gen"]} if "gen" in t else t["args"],
+             "expected": t.get("expected"), "expected_label": t.get("expected_label"),
+             "part": t.get("part", 1), "label": t.get("label"), "time_limit_ms": t.get("time_limit_ms")}
             for t in problem["tests"]
         ],
     }

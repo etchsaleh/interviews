@@ -8,12 +8,33 @@ import copy
 import io
 import json
 import os
+import signal
 import sys
 import tempfile
 import time
 import traceback
 
 MARKER = "__PRACTICE_RESULTS__"
+DEFAULT_TEST_LIMIT_MS = 2000   # per test, unless the test sets its own limit
+AFTER_TIMEOUT_LIMIT_MS = 500   # once something timed out, don't wait long on every remaining test
+
+
+class TestTimeout(BaseException):
+    """Raised by the per-test alarm. A BaseException, so `except Exception` in solutions can't swallow it."""
+
+
+def _on_alarm(_signum, _frame):
+    raise TestTimeout()
+
+
+def generate(code):
+    """Run a test's input generator (a snippet that sets `args`, and optionally `expected`)."""
+    scope = {"__name__": "generator"}
+    exec(compile(code, "<generator>", "exec"), scope)
+    return scope["args"], scope.get("expected", _MISSING)
+
+
+_MISSING = object()
 
 
 def to_jsonable(value):
@@ -94,17 +115,51 @@ def main():
         return
 
     runner = {"class": run_class, "script": run_script}.get(spec["mode"], run_function)
-    for args in spec["tests"]:
+    can_alarm = hasattr(signal, "setitimer")
+    if can_alarm:
+        signal.signal(signal.SIGALRM, _on_alarm)
+    limits = spec.get("limits") or [None] * len(spec["tests"])
+    budget = spec.get("budget_s", 60)
+    run_started = time.perf_counter()
+    timed_out = False
+    for args, limit_ms in zip(spec["tests"], limits):
+        if time.perf_counter() - run_started > budget:
+            results.append({"actual": None, "stdout": "", "ms": 0,
+                            "error": "Not run: the run's time budget was used up by earlier slow tests."})
+            continue
         out = io.StringIO()
+        expected = _MISSING
+        try:
+            if isinstance(args, dict) and "__gen__" in args:
+                args, expected = generate(args["__gen__"])
+            else:
+                args = copy.deepcopy(args)
+        except BaseException as exc:  # noqa: BLE001 - a broken generator is the app's bug, but report it
+            results.append({"actual": None, "stdout": "", "ms": 0, "error": "Test generator failed: " + repr(exc)})
+            continue
+        limit_ms = limit_ms or (AFTER_TIMEOUT_LIMIT_MS if timed_out else DEFAULT_TEST_LIMIT_MS)
         start = time.perf_counter()
         try:
+            if can_alarm:
+                signal.setitimer(signal.ITIMER_REAL, limit_ms / 1000)
             with contextlib.redirect_stdout(out):
-                actual = runner(namespace, spec["entry"], copy.deepcopy(args))
+                actual = runner(namespace, spec["entry"], args)
+            if can_alarm:
+                signal.setitimer(signal.ITIMER_REAL, 0)
             results.append({"actual": to_jsonable(actual), "error": None})
+        except TestTimeout:
+            timed_out = True
+            results.append({"actual": None, "error": (
+                f"Time limit exceeded: stopped after {limit_ms} ms. "
+                "Look for an infinite loop, or an algorithm that's too slow for this input size (e.g. O(n²) where O(n) is needed).")})
         except BaseException as exc:  # noqa: BLE001
+            if can_alarm:
+                signal.setitimer(signal.ITIMER_REAL, 0)
             results.append({"actual": None, "error": short_traceback(exc)})
         results[-1]["stdout"] = out.getvalue()
         results[-1]["ms"] = round((time.perf_counter() - start) * 1000, 2)
+        if expected is not _MISSING:
+            results[-1]["expected"] = to_jsonable(expected)
 
     print(MARKER + json.dumps({"results": results, "stdout": load_out.getvalue()}))
 

@@ -47,12 +47,19 @@ def test_print_output_is_captured():
     assert report["cases"][0]["passed"]
 
 
-def test_infinite_loop_times_out(monkeypatch):
-    import runner
-    monkeypatch.setattr(runner, "TIMEOUT_SECONDS", 1)
-    report = runner.run_solution(BY_ID["two-sum"], "def two_sum(nums, target):\n    while True: pass\n")
-    assert not report["ok"]
-    assert "Time limit" in report["error"]
+def test_infinite_loop_times_out_per_test():
+    import time
+    started = time.perf_counter()
+    report = run_solution(BY_ID["two-sum"], "def two_sum(nums, target):\n    while True: pass\n")
+    assert report["ok"]
+    assert all("Time limit exceeded" in c["error"] for c in report["cases"])
+    assert time.perf_counter() - started < 8
+
+
+def test_except_exception_cannot_swallow_the_time_limit():
+    code = "def two_sum(nums, target):\n    try:\n        while True: pass\n    except Exception:\n        return [0, 1]\n"
+    report = run_solution(BY_ID["two-sum"], code)
+    assert "Time limit exceeded" in report["cases"][0]["error"]
 
 
 def test_pages_render(client):
@@ -72,7 +79,7 @@ def test_run_endpoint(live_server):
                                  "    r = requests.get(f'{base_url}/users/{user_id}')\n"
                                  "    return r.json()['email'] if r.ok else None\n"})
     body = resp.json()
-    assert body["passed"] == body["total"] == 3
+    assert body["passed"] == body["total"] >= 3
 
 
 def test_playground(live_server):
@@ -254,3 +261,31 @@ def test_leetcode_style_problems_have_editorials(client):
 
 def test_every_problem_has_a_known_difficulty():
     assert {p["difficulty"] for p in ALL_PROBLEMS} <= {"Easy", "Medium", "Hard"}
+
+
+# ------------------------------------------------------------ performance tests
+def test_generated_tests_have_time_limits():
+    for p in ALL_PROBLEMS:
+        for t in p["tests"]:
+            if "gen" in t:
+                assert t.get("time_limit_ms"), (p["id"], t.get("label"))
+
+
+def test_brute_force_fails_only_the_performance_test():
+    brute = (
+        "def two_sum(nums, target):\n"
+        "    for i in range(len(nums)):\n"
+        "        for j in range(i + 1, len(nums)):\n"
+        "            if nums[i] + nums[j] == target:\n"
+        "                return [i, j]\n"
+    )
+    report = run_solution(BY_ID["two-sum"], brute)
+    failed = [c for c in report["cases"] if not c["passed"]]
+    assert len(failed) == 1 and failed[0]["time_limit_ms"]
+    assert "Time limit exceeded" in failed[0]["error"]
+
+
+def test_linear_scan_fails_the_log_n_probe():
+    report = run_solution(BY_ID["binary-search"], "def search(nums, target):\n    return nums.index(target) if target in nums else -1\n")
+    failed = [c for c in report["cases"] if not c["passed"]]
+    assert failed and all("O(n)" in c["error"] for c in failed)
