@@ -1,4 +1,4 @@
-"""Short editorials for the LeetCode-style problems, keyed by problem id.
+"""Short editorials for the single-part problems, keyed by problem id.
 
 Shown in the problem page's Editorial tab behind a reveal button. Each one is the idea,
 the steps, complexity, and the mistakes people make, in that order.
@@ -318,5 +318,91 @@ scores come first and ties go alphabetically.
 
 **Pitfalls:** `sorted(..., reverse=True)` on `(score, name)` reverses the name tie-break too; `reset`
 raising `KeyError` for unknown players.
+""",
+
+    # ------------------------------------------------------------------ APIs
+    "api-active-users": """
+**Idea:** one GET, then filter and sort in Python.
+
+**Steps:** `resp = requests.get(f"{base_url}/users", timeout=5)`; `resp.raise_for_status()`;
+`return sorted(u["name"] for u in resp.json() if u["active"])`.
+
+**Pitfalls:** forgetting `timeout=` (requests waits forever by default); comparing
+`u["active"] == "true"` (JSON `true` is already Python `True`); returning users instead of names.
+""",
+    "api-user-email": """
+**Idea:** a 404 is an expected answer here ("no such user"), not a failure. Handle it before
+treating other errors as exceptions.
+
+**Steps:** GET `/users/{user_id}`; `if resp.status_code == 404: return None`; then
+`resp.raise_for_status()` and `return resp.json()["email"]`.
+
+**Pitfalls:** calling `raise_for_status()` first (the 404 becomes an exception); reading
+`resp.json()["email"]` on the 404 body (`KeyError`); using `resp.ok` and hiding a 500 as `None`.
+""",
+    "api-team-filter": """
+**Idea:** let the server filter with query parameters, then sort the ids.
+
+**Steps:** `requests.get(f"{base_url}/users", params={"team": team, "active": "true"}, timeout=5)`;
+`return sorted(u["id"] for u in resp.json())`.
+
+**Pitfalls:** building `?team=...` by hand (no URL encoding); sending `active=True` (becomes the
+string `"True"`); assuming an unknown team is a 404 (it's an empty list).
+""",
+    "api-create-todo": """
+**Idea:** POST a JSON body and read the created object from the 201 response.
+
+**Steps:** `requests.post(f"{base_url}/todos", json={"title": title, "completed": False}, timeout=5)`;
+`raise_for_status()`; `return resp.json()["id"]`.
+
+**Pitfalls:** `data=` instead of `json=` (sends a form, so the server sees no JSON title and returns
+400); returning the whole dict instead of the id.
+""",
+    "api-pagination": """
+**Idea:** keep requesting pages until `next_page` is `null` (Python `None`).
+
+**Steps:** `page = 1`; `while page is not None:` GET `/orders` with `params={"page": page}`, add up
+`order["total"]` for `body["data"]`, then `page = body["next_page"]`. Return `round(total, 2)`.
+
+**Complexity:** one request per page.
+
+**Pitfalls:** stopping after page 1; looping until an empty page (one extra request, and wrong
+if the API errors past the end); rounding each page instead of once at the end.
+""",
+    "api-auth-profile": """
+**Idea:** log in to get a token, then send it as a header on the next call. A `Session` holds the
+header for you.
+
+**Steps:** POST `/login` with `json={"username": ..., "password": ...}`; on 401 return `None`;
+set `session.headers["Authorization"] = f"Bearer {token}"`; GET `/profile`; return
+`display_name`.
+
+**Pitfalls:** missing the `Bearer ` prefix; sending the token as a query param; letting a 401
+raise instead of returning `None`.
+""",
+    "api-retry": """
+**Idea:** a bounded retry loop: retry only the retryable status (503), back off between tries,
+and raise once the attempts run out.
+
+**Steps:** `for attempt in range(5):` GET; on 503 `time.sleep(0.05 * (attempt + 1))` and
+`continue`; otherwise `raise_for_status()` and return `value`. After the loop,
+`raise RuntimeError(...)`.
+
+**Pitfalls:** `while True` with no cap; retrying a 404 or 400 (they won't fix themselves);
+returning `None` after the last failure instead of raising. In production add jitter and
+retry on `requests.ConnectionError` / `Timeout` too.
+""",
+    "api-spend-by-user": """
+**Idea:** a client-side join: fetch users and all orders, sum orders by `user_id`, then map ids
+to names.
+
+**Steps:** `totals = {u["id"]: 0 for u in users}` (so users with no orders get 0); walk every
+page of orders adding `totals[o["user_id"]] += o["total"]`; return
+`{u["name"]: round(totals[u["id"]], 2) for u in users}`.
+
+**Complexity:** O(users + orders), one request per page plus one for users.
+
+**Pitfalls:** fetching `/users/{id}` once per order (N+1 requests); only reading page 1 of orders;
+dropping users with no orders.
 """,
 }

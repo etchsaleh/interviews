@@ -60,7 +60,16 @@
       <p>The editorial explains the approach. Try the problem first, then compare.</p>
       <button class="primary" type="button" onclick="document.getElementById('editorial-gate').hidden = true; document.getElementById('editorial-body').hidden = false;">Reveal editorial</button>
     </div>
-    <div id="editorial-body" hidden>{{ problem.editorial|md }}</div>
+    <div id="editorial-body" hidden>
+      {% if problem.editorial is string %}{{ problem.editorial|md }}
+      {% else %}{% for text in problem.editorial %}
+      <section class="part" data-part="{{ loop.index }}" hidden>
+        <h3>Part {{ loop.index }}: {{ problem.parts[loop.index0].title }}</h3>
+        {{ text|md }}
+      </section>
+      {% endfor %}
+      <p class="muted small">Editorials for later parts appear as you unlock them.</p>{% endif %}
+    </div>
   </div>
   {% endif %}
   <div class="tab-panel" id="tab-tests" hidden>
