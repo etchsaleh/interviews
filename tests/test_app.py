@@ -63,7 +63,7 @@ def test_except_exception_cannot_swallow_the_time_limit():
 
 
 def test_pages_render(client):
-    for path in ["/", "/guide", "/plan", "/system-design", "/fde", "/playground", "/problem/two-sum",
+    for path in ["/", "/guide", "/reference", "/plan", "/system-design", "/fde", "/playground", "/problem/two-sum",
                  "/problem/api-retry", "/problem/ttl-cache", "/problem/ai-agent-loop"]:
         resp = client.get(path)
         assert resp.status_code == 200, path
@@ -289,3 +289,11 @@ def test_linear_scan_fails_the_log_n_probe():
     report = run_solution(BY_ID["binary-search"], "def search(nums, target):\n    return nums.index(target) if target in nums else -1\n")
     failed = [c for c in report["cases"] if not c["passed"]]
     assert failed and all("O(n)" in c["error"] for c in failed)
+
+
+def test_python_reference_examples_all_run():
+    import subprocess, sys
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    proc = subprocess.run([sys.executable, "tools/check_reference.py"], cwd=root, capture_output=True, text=True)
+    assert proc.returncode == 0, proc.stdout[-2000:]

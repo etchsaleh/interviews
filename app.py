@@ -96,6 +96,12 @@ def guide():
     return render_template("guide.html", guide_md=(HERE / "GUIDE.md").read_text(encoding="utf-8"))
 
 
+@app.get("/reference")
+def reference():
+    return render_template("guide.html", guide_md=(HERE / "PYTHON_REFERENCE.md").read_text(encoding="utf-8"),
+                           page_title="Python Reference")
+
+
 @app.get("/plan")
 def plan():
     return render_template(

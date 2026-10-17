@@ -4,8 +4,11 @@
 
 ## Priorities
 
-1. **Python fluency + easy/medium DSA**, focused on **graphs, queues and caching**. Time
-   pressure in the coding round is the real risk, and that's why you're switching to Python.
+1. **Python fluency on realistic tasks.** Brain Co.'s coding rounds reportedly aren't very
+   LeetCode-like: they mimic real work (parse messy data, apply business rules, keep it fast
+   enough at scale). Do the [Real-world](/problem/rw-log-triage) set first and keep the
+   [Python Reference](/reference) open. Easy/medium DSA (graphs, queues, caching) is a warm-up.
+   Time pressure in the coding round is the real risk, and that's why you're switching to Python.
 2. **System design fundamentals**: clarifying questions, requirements, trade-offs.
 3. **Quick refresher** on API calls (GET/POST, params, reading JSON) and basic Python classes.
 
@@ -20,11 +23,12 @@ The role is about building whole products with the customer: spec → API → UI
 
 | When | Add |
 |---|---|
+| Every week | One **Real-world** problem per day as a timed round (≈45 min, all parts): [Log Triage](/problem/rw-log-triage), [Payment Reconciliation](/problem/rw-reconcile), [Clinic Scheduling](/problem/rw-clinic-scheduler), [Inventory Reorder](/problem/rw-inventory-reorder). Redo the slowest one from a blank editor at the end of the week. Read the [Python Reference](/reference) §1 and §8 (choosing a data structure, `collections`) first |
 | Week 1 | [Permit Tracker](/problem/product-permit-tracker) parts 1–3. Guide §15 *LLM apps in Python*. React drills 1–2. Scenarios: *Discovery*, *Write the spec* |
 | Week 2 | [Permit Tracker](/problem/product-permit-tracker) parts 4–5. [LLM API Client](/problem/ai-llm-client). React drills 3–5 against your own API. Scenarios: *Prioritise*, *Scope a pilot*, *Scope creep* |
 | Week 3 | Redo the Permit Tracker from a blank editor in under 60 minutes. React drills 6–7. [Agent Tool-Use Loop](/problem/ai-agent-loop), [RAG](/problem/ai-rag-retrieval) and [Sensor Data Pipeline](/problem/ai-sensor-pipeline) as timed mocks. System design: *AI-assisted building permits*. Rehearse your behavioural stories |
 
-If time is short, cut Fundamentals and the API refresher before cutting these.
+If time is short, cut the classic DSA sets (Graphs, Queues, Caching, Fundamentals) and the API refresher before cutting these.
 
 ## How to practise a problem
 

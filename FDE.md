@@ -24,11 +24,18 @@ posting, so check the one you applied to):
 - **Travel and on-site work**: one posting mentions willingness to travel globally for 6+ months and work
   directly with subject-matter experts and end users.
 
+**The coding rounds** reportedly aren't very LeetCode-like: they mimic real-world tasks, grounded in
+the kind of work above. Expect a messy input (logs, CSV exports, schedules), business rules stated
+in plain language, follow-up parts that change the rules, and data big enough that an O(n²) scan
+is too slow. Practise with Problems → **Real-world**, and know the standard library cold
+([Python Reference](/reference)): `csv`, `datetime`, `re`, `collections`, `Decimal`/`Fraction`.
+
 So the bar is a **product engineer who ships whole features**: spec → API → UI → AI
 feature → deploy → support, with the customer in the room. Practise in this order:
 
 | Skill | Where |
 |---|---|
+| Real-world coding rounds: messy data, business rules, scale | Problems → Real-world (*Log Triage*, *Payment Reconciliation*, *Clinic Scheduling*, *Inventory Reorder*) |
 | Build a backend product in stages, with an AI feature | Problems → Product Engineering → *Build a Permit Tracker* |
 | Build the UI for it in React + TypeScript | The drills below (outside this app) |
 | Write a spec with a customer, prioritise, demo | Scenarios: *Write the spec*, *Prioritise the backlog*, *Discovery*, *Scope creep* |

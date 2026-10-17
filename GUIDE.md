@@ -4,6 +4,10 @@ This guide is for Java engineers who need to answer coding interviews in Python.
 what you already know (algorithms, OOP, HTTP) and focuses on **how to say it in Python**,
 plus the traps that catch Java developers.
 
+> **Looking for the full data-structure and standard-library reference?** See
+> [Python Reference](/reference): when and why to use each structure, every common method
+> with examples, `collections`, `itertools`, `datetime`, `csv`/`json`, `re` and more.
+
 [TOC]
 
 ---

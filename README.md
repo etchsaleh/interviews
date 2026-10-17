@@ -1,9 +1,10 @@
 # pypractice — Python interview practice
 
 A small local web app for interview prep in Python, built for a Java engineer making the
-switch. It focuses on **graphs, queues and caching** (easy/medium, each with a twist),
-basic Python OOP, a light API refresher, and **system design** practice. It also has a
-3-week [study plan](STUDY_PLAN.md) and a [Java → Python guide](GUIDE.md).
+switch. It leads with **real-world coding rounds** (messy data, business rules, scale),
+product engineering and applied-AI problems, with classic DSA (graphs, queues, caching) as
+warm-ups, plus **system design** practice. It also has a 3-week [study plan](STUDY_PLAN.md),
+a [Python Reference](PYTHON_REFERENCE.md) for the standard library and a [Java → Python guide](GUIDE.md).
 
 ## Run it
 
@@ -23,7 +24,8 @@ Open http://127.0.0.1:5000.
 
 | Page | What it does |
 |---|---|
-| **Problems** (`/`) | 46 problems: Product Engineering (1), Applied AI (4), Multi-part (6), Graphs (5), Queues (4), Caching (4), Python OOP (2), Fundamentals (12), APIs (8). Shows solved ticks and best times |
+| **Problems** (`/`) | 50 problems: Real-world (4), Product Engineering (1), Applied AI (4), Multi-part (6), Graphs (5), Queues (4), Caching (4), Python OOP (2), Fundamentals (12), APIs (8). Shows solved ticks and best times |
+| **Real-world** | Grounded multi-part rounds with no puzzle tricks: *Log Triage* (parse access logs, per-endpoint p95, incident windows), *Payment Reconciliation* (bank CSV vs ledger, tolerant matching), *Clinic Scheduling* (free slots, bookings, earliest across doctors) and *Inventory Reorder* (stock from events, reorder points, packs and minimums). Each has scale tests that an O(n²) approach fails |
 | **Product Engineering** | *Build a Permit Tracker*: a Flask + SQLite backend built in 5 parts (create/validate, review workflow + audit history, search + pagination, persistence, an AI summary feature with caching), graded through Flask's test client |
 | **Applied AI** | Multi-part problems for FDE / applied-AI roles: an LLM API client (retries, structured extraction, bounded concurrency), an agent tool-use loop, RAG chunking/ranking/evals, and a sensor-data pipeline. LLM problems run against a built-in mock of the Messages API, so no API key or network is needed |
 | **Multi-part** | Question-bank style rounds (durable cache, IPv4/CIDR iterator, monster battle, file dedup, cluster messaging, GPU credits). Parts unlock one at a time as your tests pass; earlier parts' tests keep running; discussion follow-ups appear at the end |
@@ -32,6 +34,7 @@ Open http://127.0.0.1:5000.
 | **System Design** (`/system-design`) | End-to-end interview framework, clarifying-question checklist, building blocks (LB, API gateway, queues, caches…), trade-offs, and 13 deliberately vague prompts (4 applied-AI ones: government permits, hospital, LLM gateway, eval & monitoring) with a 45-min mock timer, notes, and reveal-after sections |
 | **Role Prep** (`/fde`) | Prep for AI product engineer / deployed roles: what Brain Co.'s AI Product Engineer postings ask for, React + TypeScript drills that build a UI on your Permit Tracker API, a TypeScript-for-Java cheat sheet, and 9 customer role-plays (discovery, writing the spec, prioritising, pilot scoping, a hallucination in front of the client, air-gapped constraints, scope creep, explaining accuracy, proving ROI) |
 | **Playground** (`/playground`) | Run any snippet and see its `print` output |
+| **Python Reference** (`/reference`) | The standard library in depth: how to choose a data structure, and the methods of str/list/dict/set, `collections`, `heapq`, `bisect`, `itertools`, `functools`, dataclasses, pathlib, csv/json, datetime, `re`, Decimal, generators, concurrency, logging. Every example is checked by `tools/check_reference.py` |
 | **Guide** (`/guide`) | Java → Python cheat sheet: syntax, collections, comprehensions, classes, sorting, exceptions, `requests`, interview patterns, gotchas |
 | **Mock API** (`/mock/...`) | In-memory REST API the API problems call: users, paginated orders, todos (POST), login + bearer token, a flaky 503 endpoint, `/echo`, and a mock LLM at `/mock/llm/v1/messages` (`mock_llm.py`). Open `/mock` for the list |
 
@@ -51,7 +54,7 @@ Your code is saved in the browser (localStorage) as you type.
 
 ## Adding a problem
 
-Append a dict to `problems/focus.py`, `problems/algorithms.py` or `problems/api.py`:
+Append a dict to `problems/focus.py`, `problems/algorithms.py` or `problems/api.py` (multi-part rounds go in `problems/multipart.py`, `problems/realworld.py` or `problems/applied_ai.py`):
 
 ```python
 {
