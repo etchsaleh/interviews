@@ -251,10 +251,13 @@ def test_study_plan_and_fde_links_resolve(client):
             assert pid in BY_ID, (doc, pid)
 
 
-def test_leetcode_style_problems_have_editorials(client):
-    from problems import EDITORIAL_CATEGORIES
-    missing = [p["id"] for p in ALL_PROBLEMS if p["category"] in EDITORIAL_CATEGORIES and not p.get("editorial")]
+def test_every_problem_has_an_editorial(client):
+    missing = [p["id"] for p in ALL_PROBLEMS if not p.get("editorial")]
     assert not missing, missing
+    for p in MULTIPART:
+        assert isinstance(p["editorial"], list) and len(p["editorial"]) == len(p["parts"]), p["id"]
+    page = client.get("/problem/rw-log-triage").get_data(as_text=True)
+    assert page.count('class="part" data-part=') == 2 * 3  # each part's editorial is gated like the part itself
     page = client.get("/problem/two-sum").get_data(as_text=True)
     assert "Reveal editorial" in page and "Kadane" not in page
 

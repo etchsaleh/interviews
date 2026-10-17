@@ -1,6 +1,9 @@
 from problems.algorithms import PROBLEMS as ALGORITHMS
 from problems.applied_ai import PROBLEMS as APPLIED_AI
 from problems.editorials import EDITORIALS
+from problems.editorials_applied_ai import PART_EDITORIALS as AI_EDITORIALS
+from problems.editorials_multipart import PART_EDITORIALS as MP_EDITORIALS
+from problems.editorials_realworld import PART_EDITORIALS as RW_EDITORIALS
 from problems.extra_tests import EXTRA_TESTS
 from problems.api import PROBLEMS as API_PROBLEMS
 from problems.focus import PROBLEMS as FOCUS
@@ -25,12 +28,10 @@ CATEGORY_NOTES = {
 
 ALL_PROBLEMS = sorted(REALWORLD + PRODUCT + APPLIED_AI + MULTIPART + ALGORITHMS + FOCUS + API_PROBLEMS, key=lambda p: CATEGORY_ORDER.index(p["category"]))
 BY_ID = {p["id"]: p for p in ALL_PROBLEMS}
-for problem_id, editorial in EDITORIALS.items():
-    BY_ID[problem_id]["editorial"] = editorial
+for problem_id, editorial in {**EDITORIALS, **AI_EDITORIALS, **MP_EDITORIALS, **RW_EDITORIALS}.items():
+    BY_ID[problem_id]["editorial"] = editorial  # a string, or one string per part for multi-part problems
 for problem_id, tests in EXTRA_TESTS.items():
     BY_ID[problem_id]["tests"].extend(tests)
 
-# Categories whose problems are LeetCode-style and must have an editorial.
-EDITORIAL_CATEGORIES = {"Fundamentals", "Graphs", "Queues", "Caching", "Python OOP"}
 
 assert len(BY_ID) == len(ALL_PROBLEMS), "duplicate problem ids"
